@@ -20,8 +20,10 @@ else
              ImageUrl="@_repository.ShowcaseImageUrl"
              StructuredData="@StructuredData" />
 
+    @* Le bandeau du site a disparu (ADR 0010) : ce fil porte donc aussi le changement de langue. *@
     <nav class="breadcrumb">
         <a href=".">← @T["Repo.Breadcrumb"]</a>
+        <CultureSelector />
     </nav>
 
     <article class="repo">

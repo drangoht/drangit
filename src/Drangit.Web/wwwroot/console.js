@@ -258,6 +258,10 @@
         });
     }
 
+    // Le curseur est dans la ligne de commande dès l'arrivée : on ouvre un terminal pour y
+    // taper. `preventScroll` évite que la page saute jusqu'au champ, qui est en bas du cadre.
+    input.focus({ preventScroll: true });
+
     input.addEventListener("keydown", function (event) {
         if (event.key === "ArrowUp" && historyIndex > 0) {
             event.preventDefault();

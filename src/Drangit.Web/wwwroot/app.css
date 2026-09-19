@@ -342,6 +342,26 @@ code {
     font-variant-numeric: tabular-nums;
 }
 
+/* Dans la barre de titre, le sélecteur de langue se fait tout petit : c'est une mention de
+   fenêtre, pas un élément de page. */
+.window__bar .culture {
+    border: 0;
+    padding: 0;
+    gap: 0;
+}
+
+.window__bar .culture__button {
+    padding: 0 0.4rem;
+    font-size: inherit;
+    border-radius: 0;
+}
+
+.window__bar .culture__button--current {
+    background: none;
+    color: var(--accent);
+    font-weight: 400;
+}
+
 /* L'écran défile dans la fenêtre plutôt que d'allonger la page : le prompt reste visible au
    bas du cadre, comme dans un terminal, et la sortie s'empile au-dessus de lui. La trame de
    balayage donne le grain d'un écran ; elle est en fond, donc sous le texte. */
@@ -1009,7 +1029,14 @@ h1.cli__note {
 
 /* --- Fiche dépôt ---------------------------------------------------------- */
 
+/* Le retour à gauche, la langue à droite : c'est tout ce que ces pages gardent de l'ancien
+   bandeau, et il n'y a rien entre les deux. */
 .breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
     margin-bottom: 1.5rem;
     font-size: 0.9rem;
 }

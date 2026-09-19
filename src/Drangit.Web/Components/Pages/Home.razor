@@ -20,6 +20,10 @@
         <span class="window__dots" aria-hidden="true"></span>
         <span class="window__name">@Site.Value.Name.ToLowerInvariant() — bash</span>
         <span class="window__meta">@_allRepositories.Count @T["Prompt.Stats.Repositories"]</span>
+        @* Le bandeau du site ayant disparu, la barre de titre porte le changement de langue :
+           les adresses sont par langue (ADR 0006) et il faut pouvoir passer de l'une à
+           l'autre autrement qu'en éditant l'URL. *@
+        <CultureSelector />
     </div>
 
     <div class="window__screen">

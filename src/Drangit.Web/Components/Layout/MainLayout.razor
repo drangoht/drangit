@@ -1,52 +1,19 @@
 @inherits LayoutComponentBase
 @inject IStringLocalizer<SharedResources> T
-@inject IOptions<SiteOptions> Site
 @inject NavigationManager Navigation
 
-@* Adresse courante répétée en entier : avec <base>, une référence réduite à un fragment
-   se résout contre la base et non contre la page — « #main » seul ferait quitter la page. *@
+@* Ni en-tête ni pied : la page est la fenêtre de terminal, et rien ne l'encadre (ADR 0010).
+   Ce que le bandeau portait est reparti où il sert — le sélecteur de langue dans la barre de
+   titre de la fenêtre, la navigation dans les commandes « cd » et les fils d'Ariane. *@
+
+@* Le lien d'évitement reste : il est invisible jusqu'à ce qu'on l'atteigne au clavier, et
+   l'adresse courante y est répétée en entier — avec <base>, un « #main » nu se résoudrait
+   contre la base et ferait quitter la page. *@
 <a class="skip-link" href="@CurrentPath#main">@T["Nav.SkipToContent"]</a>
-
-<header class="site-header">
-    <div class="shell site-header__inner">
-        <a class="brand" href=".">
-            <span class="brand__mark" aria-hidden="true">&lt;/&gt;</span>
-            <span class="brand__name">@Site.Value.Name</span>
-        </a>
-
-        <nav class="site-nav" aria-label="@T["Nav.Repositories"]">
-            <NavLink class="site-nav__link" href="." Match="NavLinkMatch.All">@T["Nav.Repositories"]</NavLink>
-            <NavLink class="site-nav__link" href="about">@T["Nav.About"]</NavLink>
-        </nav>
-
-        <CultureSelector />
-    </div>
-</header>
 
 <main id="main" class="shell site-main">
     @Body
 </main>
-
-<footer class="site-footer">
-    <div class="shell site-footer__inner">
-        <p class="site-footer__text">© @DateTimeOffset.UtcNow.Year @Site.Value.Name — @T["Footer.Rights"]</p>
-        <ul class="site-footer__links">
-            <li>
-                <a href="@Site.Value.GitHubUrl" rel="noopener noreferrer external" target="_blank">
-                    @T["Footer.GitHubProfile"]
-                </a>
-            </li>
-            @if (!string.IsNullOrWhiteSpace(Site.Value.ItchProfileUrl))
-            {
-                <li>
-                    <a href="@Site.Value.ItchProfileUrl" rel="noopener noreferrer external" target="_blank">
-                        @T["Footer.ItchProfile"]
-                    </a>
-                </li>
-            }
-        </ul>
-    </div>
-</footer>
 
 @code {
     /// <summary>Adresse de la page courante, préfixe de langue et critères compris.</summary>
