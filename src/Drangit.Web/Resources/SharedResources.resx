@@ -328,4 +328,13 @@ HTTP 418 — I'm a teapot.</value>
   <data name="Listing.Pushed" xml:space="preserve">
     <value>pushed</value>
   </data>
+  <data name="Home.More" xml:space="preserve">
+    <value>… and {0} more</value>
+  </data>
+  <data name="Home.ShowAll" xml:space="preserve">
+    <value>show all</value>
+  </data>
+  <data name="Home.RepoCountOf" xml:space="preserve">
+    <value>{0} repositories of {1}</value>
+  </data>
 </root>

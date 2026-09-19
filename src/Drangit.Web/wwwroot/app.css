@@ -30,6 +30,14 @@
     --shell: 72rem;
     --transition: 140ms ease;
 
+    /* La trame de balayage, partagée par l'écran et la ligne de commande : ils ne font
+       qu'une surface. */
+    --scanlines: repeating-linear-gradient(
+        to bottom,
+        color-mix(in srgb, #3ef08c 4%, transparent) 0 1px,
+        transparent 1px 3px
+    );
+
     --mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
@@ -341,11 +349,7 @@ code {
     height: min(72vh, 640px);
     overflow-y: auto;
     padding: 1.1rem 1.15rem 0.5rem;
-    background: repeating-linear-gradient(
-        to bottom,
-        color-mix(in srgb, var(--accent) 4%, transparent) 0 1px,
-        transparent 1px 3px
-    );
+    background: var(--scanlines);
 }
 
 /* Sur un écran bas ou un téléphone, une hauteur fixe enfermerait la liste dans une fente :
@@ -587,14 +591,15 @@ h1.cli__note {
    c'est l'invite et le texte tapé, comme dans un terminal. Le bouton d'envoi est là mais
    masqué — la touche Entrée suffit, et un bouton « Appliquer » casserait l'illusion sans
    rien apporter à qui navigue au clavier. */
+/* Dans la continuité de l'écran, sans séparateur ni décalage : c'est la dernière ligne du
+   terminal, pas un champ posé sous lui. Le calage horizontal reprend celui de l'écran. */
 .cli__form {
     display: flex;
     align-items: baseline;
     gap: 0.6ch;
-    margin-top: 2.5rem;
-    padding: 0.5rem 0.4rem;
-    border-top: 1px solid var(--border);
+    padding: 0.35rem 1.15rem 0.9rem;
     font-size: 0.95rem;
+    background: var(--scanlines);
 }
 
 .cli__form input {
@@ -619,8 +624,7 @@ h1.cli__note {
 /* La ligne entière prend la mise en avant du focus : le champ n'ayant pas de cadre, un
    contour sur lui seul serait invisible au milieu du texte. */
 .cli__form:focus-within {
-    border-top-color: var(--accent);
-    background: color-mix(in srgb, var(--accent) 6%, transparent);
+    background: color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
 /* Le bloc du curseur, à la fin de la sortie. Il clignote, sauf si le visiteur a demandé
@@ -1156,4 +1160,12 @@ h1.cli__note {
         transition-duration: 0.01ms !important;
         animation-duration: 0.01ms !important;
     }
+}
+
+/* La suite de la liste, annoncée comme un programme le ferait. */
+.cli__more {
+    margin: 0.75rem 0 0;
+    padding-left: 0.4rem;
+    color: var(--text-muted);
+    font-size: 0.88rem;
 }

@@ -45,9 +45,11 @@
             </p>
 
             <p class="results-count" role="status">
-                @(_visibleRepositories.Count == 1
-                    ? T["Home.RepoCountOne"].Value
-                    : string.Format(CultureInfo.CurrentCulture, T["Home.RepoCount"].Value, _visibleRepositories.Count))
+                @(Listed.Count == _visibleRepositories.Count
+                    ? _visibleRepositories.Count == 1
+                        ? T["Home.RepoCountOne"].Value
+                        : string.Format(CultureInfo.CurrentCulture, T["Home.RepoCount"].Value, _visibleRepositories.Count)
+                    : string.Format(CultureInfo.CurrentCulture, T["Home.RepoCountOf"].Value, Listed.Count, _visibleRepositories.Count))
             </p>
 
             @if (_visibleRepositories.Count == 0)
@@ -71,6 +73,16 @@
                         <RepositoryRow Repository="repository" />
                     }
                 </ul>
+
+                @if (Listed.Count < _visibleRepositories.Count)
+                {
+                    @* La suite est à un lien, qui fonctionne sans JavaScript et reste une
+                       adresse partageable — pas à un bouton qui déplierait la liste. *@
+                    <p class="cli__more">
+                        @string.Format(CultureInfo.CurrentCulture, T["Home.More"].Value, _visibleRepositories.Count - Listed.Count)
+                        <a href="@AllHref">@T["Home.ShowAll"]</a>
+                    </p>
+                }
             }
 
             @* Les sorties que le prompt sait afficher sans recharger la page. Elles sont
@@ -246,6 +258,12 @@
     [SupplyParameterFromQuery(Name = "c")]
     private string? Command { get; set; }
 
+    /// <summary>Écrit la liste en entier plutôt que son début.</summary>
+    [SupplyParameterFromQuery(Name = "all")]
+    private string? All { get; set; }
+
+    private bool ShowAll => bool.TryParse(All, out var all) && all;
+
     private bool WithDemoOnly => bool.TryParse(Demo, out var demo) && demo;
 
     private bool ArchivedHidden => bool.TryParse(Active, out var active) && active;
@@ -258,10 +276,17 @@
     /// met en avant ouvre la liste. Sous filtre, l'ordre du catalogue prime — un dépôt hors
     /// critère s'inviterait en tête des résultats.
     /// </remarks>
-    private IEnumerable<Repository> Listed =>
+    private IReadOnlyList<Repository> Listed =>
+        RepositoryListing.FirstPageOf(Ordered, ShowAll ? 0 : RepositoryListing.DefaultPageSize);
+
+    /// <summary>Dépôts visibles, celui que le fichier éditorial désigne en tête.</summary>
+    private IReadOnlyList<Repository> Ordered =>
         !_filter.IsActive && FeaturedRepository.Of(_visibleRepositories) is { } featured
-            ? _visibleRepositories.Where(repository => repository != featured).Prepend(featured)
+            ? [featured, .. _visibleRepositories.Where(repository => repository != featured)]
             : _visibleRepositories;
+
+    /// <summary>Adresse de la même liste, écrite en entier.</summary>
+    private string AllHref => QueryHelpers.AddQueryString(PathOf(_filter), "all", "true");
 
     protected override async Task OnParametersSetAsync()
     {
