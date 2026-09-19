@@ -72,25 +72,23 @@ docker compose up -d          # lit .env (voir .env.example)
 - **Refit : `AliasAs` pour renommer un paramètre, jamais `Query`.** Avec `Query`, le générateur
   émet `perPage` au lieu de `per_page` : GitHub l'ignore, la page retombe à 30, et la pagination
   s'arrête en croyant avoir vu une page incomplète — sans aucune erreur.
+- **La carte de GitHub n'est affichée nulle part** (ADR 0009). Elle réécrit en anglais le nom,
+  la description et les compteurs déjà affichés sous la vignette, elle impose son fond clair et
+  l'avatar du compte, et elle coûte une requête vers un tiers par vignette. `og:image` prend la
+  capture du fichier éditorial, ou à défaut `wwwroot/og-share.png` (`SeoHead.ShareImageUrl`).
 - **L'illustration d'un dépôt se joue sur deux couches** (`RepositoryCover.razor`) : dessous,
-  un repli dessiné qui **imite la carte de GitHub** — même fond clair, même titre
-  « compte/dépôt » en haut à gauche, plus une pastille de langage ; dessus, la capture du
-  fichier éditorial si elle existe, sinon la carte elle-même. Un `onerror` retire l'image qui
-  n'a pas répondu. Le repli n'a d'intérêt que s'il **ne se remarque pas** : une tuile d'une
-  autre facture au milieu de quarante-cinq se verrait plus qu'une image manquante.
-- **La carte de GitHub est recadrée** (`.cover__image--framed` : élargie de 39 %, calée en
-  **haut à gauche**). Deux défauts d'un coup : l'avatar du compte, incrusté en haut à droite,
-  et la ligne de compteurs du bas, qu'un calage au centre tranchait en deux sur chaque
-  vignette. Les proportions viennent de mesures sur les cartes réelles — avatar de 76,7 % à
-  93,2 % de la largeur, colonne de titre jusqu'à 68 %, compteurs à partir de 72 % de la
-  hauteur. **Toute retouche se vérifie à l'œil**, en recadrant une carte réelle et en la
-  regardant, pas au calcul.
-- **La vitrine n'affiche jamais la carte de GitHub** (`UsePreviewCard="false"`) : sa bande est
-  bien plus large que haute, et le recadrage y couperait le titre de la carte en deux.
-- **La carte de GitHub ne sort jamais du site.** Un aperçu de partage s'affiche chez autrui,
-  où aucun recadrage ne s'applique : `og:image` prend la capture du fichier éditorial, ou à
-  défaut `wwwroot/og-share.png`, l'image du site (`SeoHead.ShareImageUrl`). `ShowcaseImageUrl`
-  ne rend donc qu'une capture, jamais la carte — `PreviewImageUrl` reste réservée aux pages.
+  une vignette **dessinée** — la teinte vient du langage, l'inclinaison du dégradé vient du nom,
+  et le nom complet s'y écrit comme une ligne de terminal ; dessus, la capture du fichier
+  éditorial si elle existe. Un `onerror` retire l'image qui n'a pas répondu. Sans cette
+  vignette, les quarante et un dépôts sans capture laisseraient un trou dans la grille.
+- **Deux teintes, pas une** (`RepositoryVisual`) : `AccentOf` colore le fond, `InkOf` écrit —
+  le prompt et la pastille. Les couleurs de `linguist` sont faites pour un fond clair, et les
+  plus sombres (PowerShell, Lua, Ruby) disparaissent sur la vignette : sous un seuil de
+  luminance, `InkOf` les éclaircit. **Ajouter un langage à la table demande de regarder le
+  résultat**, pas seulement de lire la valeur.
+- **Pas de padding en pourcentage sur une tuile.** Il se calcule sur la largeur du *bloc
+  conteneur*, pas sur celle de l'élément : sur la fiche, 7 % valaient 78 px dans une tuile de
+  350 et n'y laissaient plus de place au titre.
 - **Toute chaîne affichée passe par `IStringLocalizer<SharedResources>`.** Un texte en dur
   dans un composant casse la moitié du site.
 - **Ajouter une clé de traduction, c'est l'ajouter dans les deux `.resx`.**
