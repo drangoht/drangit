@@ -1,0 +1,49 @@
+@inject IStringLocalizer<SharedResources> T
+
+<article class="card @(Repository.IsArchived ? "card--archived" : null)">
+    <a class="card__link" href="repos/@Repository.Slug.Value">
+        <RepositoryCover Repository="Repository" />
+
+        <div class="card__body">
+            <h2 class="card__title">@Repository.Name</h2>
+
+            @if (Description is { } description)
+            {
+                <p class="card__tagline">@description</p>
+            }
+        </div>
+    </a>
+
+    <div class="card__meta">
+        <ul class="facts">
+            @if (Repository.Language is { } language)
+            {
+                <li class="facts__item facts__item--language">@language</li>
+            }
+            @if (Repository.Stars > 0)
+            {
+                <li class="facts__item" title="@T["Repo.Stars"]">★ @Repository.Stars.ToString("N0", CultureInfo.CurrentCulture)</li>
+            }
+            @if (Repository.PushedAt is { } pushedAt)
+            {
+                @* <time> et non du texte : la date affichée suit la culture du visiteur, la
+                   date lisible par une machine reste ISO-8601. *@
+                <li class="facts__item">
+                    <time datetime="@pushedAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">
+                        @pushedAt.ToString("d", CultureInfo.CurrentCulture)
+                    </time>
+                </li>
+            }
+        </ul>
+
+        <RepositoryBadges Repository="Repository" />
+    </div>
+</article>
+
+@code {
+    /// <summary>Dépôt présenté par la carte.</summary>
+    [Parameter, EditorRequired]
+    public required Repository Repository { get; set; }
+
+    private string? Description => Repository.Description.For(CultureInfo.CurrentUICulture);
+}

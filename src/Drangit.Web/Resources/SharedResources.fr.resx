@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+    <data name="Nav.Repositories" xml:space="preserve">
+    <value>Dépôts</value>
+  </data>
+  <data name="Nav.About" xml:space="preserve">
+    <value>À propos</value>
+  </data>
+  <data name="Nav.SkipToContent" xml:space="preserve">
+    <value>Aller au contenu</value>
+  </data>
+  <data name="Language.Label" xml:space="preserve">
+    <value>Langue</value>
+  </data>
+  <data name="Footer.Rights" xml:space="preserve">
+    <value>code source et projets personnels</value>
+  </data>
+  <data name="Footer.GitHubProfile" xml:space="preserve">
+    <value>Profil GitHub</value>
+  </data>
+  <data name="Footer.ItchProfile" xml:space="preserve">
+    <value>Profil itch.io</value>
+  </data>
+  <data name="Home.Title" xml:space="preserve">
+    <value>Dépôts publics</value>
+  </data>
+  <data name="Home.Intro" xml:space="preserve">
+    <value>Tout ce que j'écris à découvert : projets personnels, katas, expérimentations et les outils sur lesquels je reviens.</value>
+  </data>
+  <data name="Home.Unavailable" xml:space="preserve">
+    <value>La liste des dépôts est momentanément indisponible. Merci de réessayer dans quelques minutes.</value>
+  </data>
+  <data name="Home.Featured" xml:space="preserve">
+    <value>En vitrine</value>
+  </data>
+  <data name="Home.SeeRepository" xml:space="preserve">
+    <value>Voir la fiche</value>
+  </data>
+  <data name="Home.RepoCount" xml:space="preserve">
+    <value>{0} dépôts</value>
+  </data>
+  <data name="Home.RepoCountOne" xml:space="preserve">
+    <value>1 dépôt</value>
+  </data>
+  <data name="Home.EmptyFiltered" xml:space="preserve">
+    <value>Aucun dépôt ne correspond à ces filtres.</value>
+  </data>
+  <data name="Filter.Legend" xml:space="preserve">
+    <value>Filtres</value>
+  </data>
+  <data name="Filter.All" xml:space="preserve">
+    <value>Tout</value>
+  </data>
+  <data name="Filter.WithDemo" xml:space="preserve">
+    <value>Avec démo en ligne</value>
+  </data>
+  <data name="Filter.HideArchived" xml:space="preserve">
+    <value>Masquer les archivés</value>
+  </data>
+  <data name="Filter.Search" xml:space="preserve">
+    <value>Recherche</value>
+  </data>
+  <data name="Filter.SearchPlaceholder" xml:space="preserve">
+    <value>Nom, sujet, description…</value>
+  </data>
+  <data name="Filter.Language" xml:space="preserve">
+    <value>Langage</value>
+  </data>
+  <data name="Filter.Any" xml:space="preserve">
+    <value>Indifférent</value>
+  </data>
+  <data name="Filter.Apply" xml:space="preserve">
+    <value>Appliquer</value>
+  </data>
+  <data name="Repo.Stars" xml:space="preserve">
+    <value>Étoiles</value>
+  </data>
+  <data name="Repo.Forks" xml:space="preserve">
+    <value>Bifurcations</value>
+  </data>
+  <data name="Repo.Language" xml:space="preserve">
+    <value>Langage</value>
+  </data>
+  <data name="Repo.License" xml:space="preserve">
+    <value>Licence</value>
+  </data>
+  <data name="Repo.NoLicense" xml:space="preserve">
+    <value>Non déclarée</value>
+  </data>
+  <data name="Repo.UpdatedAt" xml:space="preserve">
+    <value>Dernier commit</value>
+  </data>
+  <data name="Repo.CreatedAt" xml:space="preserve">
+    <value>Création</value>
+  </data>
+  <data name="Repo.Archived" xml:space="preserve">
+    <value>Archivé</value>
+  </data>
+  <data name="Repo.ArchivedNotice" xml:space="preserve">
+    <value>Ce dépôt est archivé : il est en lecture seule et n'est plus maintenu.</value>
+  </data>
+  <data name="Repo.Fork" xml:space="preserve">
+    <value>Bifurcation</value>
+  </data>
+  <data name="Repo.Demo" xml:space="preserve">
+    <value>Démo en ligne</value>
+  </data>
+  <data name="Repo.ViewOnGitHub" xml:space="preserve">
+    <value>Voir sur GitHub</value>
+  </data>
+  <data name="Repo.Clone" xml:space="preserve">
+    <value>Cloner ce dépôt</value>
+  </data>
+  <data name="Repo.NoDescription" xml:space="preserve">
+    <value>Pas de description.</value>
+  </data>
+  <data name="Repo.Topics" xml:space="preserve">
+    <value>Sujets</value>
+  </data>
+  <data name="Repo.Screenshots" xml:space="preserve">
+    <value>Captures d'écran</value>
+  </data>
+  <data name="Repo.About" xml:space="preserve">
+    <value>À propos de ce dépôt</value>
+  </data>
+  <data name="Repo.Breadcrumb" xml:space="preserve">
+    <value>Tous les dépôts</value>
+  </data>
+  <data name="About.Title" xml:space="preserve">
+    <value>À propos</value>
+  </data>
+  <data name="About.Heading" xml:space="preserve">
+    <value>Ce qu'est ce site</value>
+  </data>
+  <data name="About.Body" xml:space="preserve">
+    <value>Ce site liste mes dépôts GitHub publics. La liste vient directement de l'API GitHub, rafraîchie toutes les trente minutes ; quelques descriptions, traductions et captures sont rédigées à la main et viennent s'y superposer. Rien ici n'est une copie du code : chaque dépôt renvoie vers GitHub, qui reste la source de vérité.</value>
+  </data>
+  <data name="About.Links" xml:space="preserve">
+    <value>Ailleurs</value>
+  </data>
+  <data name="NotFound.Title" xml:space="preserve">
+    <value>Page introuvable</value>
+  </data>
+  <data name="NotFound.Body" xml:space="preserve">
+    <value>Cette adresse ne correspond à aucune page. Le dépôt a peut-être été renommé ou rendu privé.</value>
+  </data>
+  <data name="NotFound.Home" xml:space="preserve">
+    <value>Retour aux dépôts</value>
+  </data>
+  <data name="Error.Title" xml:space="preserve">
+    <value>Une erreur est survenue</value>
+  </data>
+  <data name="Error.Body" xml:space="preserve">
+    <value>La page n'a pas pu être affichée. L'incident a été consigné.</value>
+  </data>
+  <data name="Error.RequestId" xml:space="preserve">
+    <value>Identifiant de la requête : {0}</value>
+  </data>
+</root>

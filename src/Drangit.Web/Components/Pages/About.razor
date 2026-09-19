@@ -1,0 +1,26 @@
+@page "/about"
+@inject IStringLocalizer<SharedResources> T
+@inject IOptions<SiteOptions> Site
+
+<PageTitle>@T["About.Title"] — @Site.Value.Name</PageTitle>
+<SeoHead CanonicalPath="/about" Title="@T["About.Title"]" Description="@T["About.Body"]" />
+
+<h1 class="page-title">@T["About.Title"]</h1>
+
+<div class="prose">
+    <h2>@T["About.Heading"]</h2>
+    <p>@T["About.Body"]</p>
+
+    <h2>@T["About.Links"]</h2>
+    <ul>
+        <li>
+            <a href="@Site.Value.GitHubUrl" rel="noopener noreferrer external" target="_blank">GitHub</a>
+        </li>
+        @if (!string.IsNullOrWhiteSpace(Site.Value.ItchProfileUrl))
+        {
+            <li>
+                <a href="@Site.Value.ItchProfileUrl" rel="noopener noreferrer external" target="_blank">itch.io</a>
+            </li>
+        }
+    </ul>
+</div>

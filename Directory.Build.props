@@ -1,0 +1,16 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <!-- `TreatWarningsAsErrors` ne couvre que le compilateur : les avertissements de
+         restauration NuGet (NU*) passent au travers. NU1605 signale qu'une dépendance a été
+         rétrogradée sous la version qu'une autre exige — c'est toujours un bug, jamais un
+         événement extérieur. -->
+    <WarningsAsErrors>$(WarningsAsErrors);NU1605</WarningsAsErrors>
+  </PropertyGroup>
+</Project>

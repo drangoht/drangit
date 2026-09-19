@@ -1,0 +1,901 @@
+/* ---------------------------------------------------------------------------
+   Drangit — feuille de style unique.
+   Pas de framework : la surface est petite, et une dépendance CSS externe
+   coûterait plus en poids et en maintenance qu'elle ne rapporterait ici.
+   --------------------------------------------------------------------------- */
+
+:root {
+    color-scheme: dark;
+
+    --bg: #0d1117;
+    --bg-elevated: #161b22;
+    --bg-input: #1c2230;
+    --border: #272e3b;
+    --border-strong: #3a4354;
+    --text: #e6edf3;
+    --text-muted: #96a2b4;
+    --accent: #6e9eff;
+    --accent-hover: #93b6ff;
+    --accent-contrast: #0b1020;
+    --success: #46d39a;
+    --warning: #f5c451;
+
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shell: 72rem;
+    --transition: 140ms ease;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+a:hover,
+a:focus-visible {
+    color: var(--accent-hover);
+    text-decoration: underline;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+h1, h2, h3 {
+    line-height: 1.25;
+    margin: 0 0 0.5em;
+}
+
+code {
+    font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+    font-size: 0.9em;
+}
+
+:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+.shell {
+    width: 100%;
+    max-width: var(--shell);
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: 0;
+    z-index: 10;
+    padding: 0.75rem 1rem;
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font-weight: 600;
+}
+
+.skip-link:focus {
+    left: 0;
+}
+
+.muted {
+    color: var(--text-muted);
+}
+
+/* --- En-tête ------------------------------------------------------------- */
+
+.site-header {
+    border-bottom: 1px solid var(--border);
+    background: rgba(13, 17, 23, 0.85);
+    backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.site-header__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.5rem;
+    padding-block: 0.9rem;
+}
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: var(--text);
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.01em;
+}
+
+.brand:hover {
+    color: var(--text);
+    text-decoration: none;
+}
+
+.brand__mark {
+    color: var(--accent);
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 0.95rem;
+}
+
+.site-nav {
+    display: flex;
+    gap: 1.25rem;
+    margin-right: auto;
+}
+
+.site-nav__link {
+    color: var(--text-muted);
+    font-weight: 500;
+    padding-block: 0.25rem;
+    border-bottom: 2px solid transparent;
+}
+
+.site-nav__link:hover {
+    color: var(--text);
+    text-decoration: none;
+}
+
+.site-nav__link.active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+}
+
+/* --- Sélecteur de langue -------------------------------------------------- */
+
+.culture {
+    display: inline-flex;
+    gap: 0.25rem;
+    padding: 0.2rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+}
+
+.culture__button {
+    border: 0;
+    background: none;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.85rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+}
+
+.culture__button:hover,
+.culture__button:focus-visible {
+    color: var(--text);
+    background: var(--bg-input);
+    /* Ce sont des liens (ADR 0006) : sans cela, ils se soulignent au survol alors qu'ils
+       ont l'apparence de boutons. */
+    text-decoration: none;
+}
+
+.culture__button--current {
+    background: var(--accent);
+    color: var(--accent-contrast);
+    font-weight: 600;
+}
+
+/* --- Corps ---------------------------------------------------------------- */
+
+.site-main {
+    flex: 1;
+    padding-block: 2.5rem 4rem;
+}
+
+.page-title {
+    font-size: clamp(1.75rem, 1.2rem + 2vw, 2.5rem);
+    letter-spacing: -0.02em;
+}
+
+.page-intro {
+    color: var(--text-muted);
+    max-width: 60ch;
+    margin-top: -0.25rem;
+}
+
+.notice {
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-elevated);
+    color: var(--text-muted);
+}
+
+.notice--warning {
+    border-color: color-mix(in srgb, var(--warning) 45%, var(--border));
+    color: var(--warning);
+}
+
+.results-count {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-block: 1.5rem 1rem;
+}
+
+/* --- Filtres -------------------------------------------------------------- */
+
+.filters {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.15rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-elevated);
+}
+
+.filters__form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.85rem;
+    margin: 0;
+}
+
+.chips {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+}
+
+.chip {
+    display: inline-block;
+    padding: 0.35rem 0.8rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    background: var(--bg-input);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    line-height: 1.4;
+    transition: color var(--transition), border-color var(--transition);
+}
+
+.chip:hover,
+.chip:focus-visible {
+    color: var(--text);
+    border-color: var(--text-muted);
+    text-decoration: none;
+}
+
+.chip--on {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-contrast);
+    font-weight: 600;
+}
+
+/* Le compte de dépôts derrière chaque critère : en retrait, il informe sans se disputer
+   la lecture avec le libellé. Sans lui, on clique sans savoir si le filtre rendra vingt
+   dépôts ou un seul. */
+.chip__count {
+    display: inline-block;
+    margin-left: 0.3rem;
+    padding: 0 0.35rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--text) 10%, transparent);
+    font-size: 0.75em;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+
+.chip--on .chip__count {
+    background: color-mix(in srgb, var(--accent-contrast) 18%, transparent);
+}
+
+.chip--on:hover,
+.chip--on:focus-visible {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    color: var(--accent-contrast);
+}
+
+.filters__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 9rem;
+}
+
+.filters__field--grow {
+    flex: 1 1 16rem;
+}
+
+.filters__field label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.filters input,
+.filters select {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.95rem;
+}
+
+.filters__actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* --- Boutons -------------------------------------------------------------- */
+
+.button {
+    display: inline-block;
+    padding: 0.55rem 1.1rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background var(--transition), color var(--transition);
+}
+
+.button--primary {
+    background: var(--accent);
+    color: var(--accent-contrast);
+}
+
+.button--primary:hover {
+    background: var(--accent-hover);
+    color: var(--accent-contrast);
+    text-decoration: none;
+}
+
+.button--ghost {
+    border-color: var(--border-strong);
+    color: var(--text-muted);
+    background: none;
+}
+
+.button--ghost:hover {
+    color: var(--text);
+    text-decoration: none;
+}
+
+/* --- Grille de dépôts ----------------------------------------------------- */
+
+.grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(min(19rem, 100%), 1fr));
+}
+
+/* --- Vitrine -------------------------------------------------------------- */
+
+/* Pleine largeur plutôt qu'une grande tuile dans la grille : les images de partage de
+   GitHub sont en 2/1 et une tuile haute les recadrerait en portrait, tandis qu'une
+   bande évite la cellule vide que laisse un catalogue dont le compte ne tombe pas juste. */
+.hero {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    margin-top: 2rem;
+    min-height: min(22rem, 58vh);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-elevated);
+    overflow: hidden;
+}
+
+/* Le voile qui protège la colonne de texte : la couverture peut être une capture
+   d'écran claire, et le titre y deviendrait illisible. Il vaut pour la couverture
+   dessinée comme pour une capture — on ne choisit pas les secondes pour cela. */
+.hero .cover--fill::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(
+            to right,
+            color-mix(in srgb, var(--bg) 92%, transparent) 0%,
+            color-mix(in srgb, var(--bg) 60%, transparent) 45%,
+            transparent 80%
+        ),
+        linear-gradient(
+            to top,
+            var(--bg-elevated) 3%,
+            color-mix(in srgb, var(--bg) 50%, transparent) 45%,
+            transparent 85%
+        );
+}
+
+.hero__body {
+    position: relative;
+    padding: clamp(1.25rem, 3vw, 2.25rem);
+}
+
+.hero__eyebrow {
+    margin: 0 0 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+}
+
+.hero__title {
+    margin: 0 0 0.5rem;
+    font-size: clamp(1.6rem, 1.1rem + 1.8vw, 2.4rem);
+    letter-spacing: -0.02em;
+}
+
+.hero__tagline {
+    margin: 0;
+    color: var(--text-muted);
+    max-width: 48ch;
+}
+
+.hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+}
+
+.hero__actions .button--ghost {
+    background: color-mix(in srgb, var(--bg) 65%, transparent);
+    color: var(--text);
+}
+
+/* --- Carte de dépôt ------------------------------------------------------- */
+
+.card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-elevated);
+    overflow: hidden;
+    transition: border-color var(--transition), transform var(--transition);
+}
+
+.card:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+}
+
+/* Un dépôt archivé reste listé, mais ne se présente pas comme le reste : il est en
+   retrait, pas masqué. */
+.card--archived .cover {
+    filter: grayscale(1);
+    opacity: 0.72;
+}
+
+.card__link {
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.card__link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.card__body {
+    padding: 0.9rem 1rem 0.5rem;
+    flex: 1;
+}
+
+.card__title {
+    font-size: 1.05rem;
+    margin-bottom: 0.35rem;
+    /* Les noms de dépôts sont longs et sans espaces : sans cela, ils débordent de la carte. */
+    overflow-wrap: anywhere;
+}
+
+.card__tagline {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem 1rem;
+}
+
+/* --- Illustration d'un dépôt ---------------------------------------------- */
+
+/* La tuile imite la carte de GitHub : même fond très clair, même titre en haut à gauche.
+   Elle sert de repli quand l'image n'arrive pas — et un repli n'a d'intérêt que s'il ne
+   se remarque pas. Une tuile sombre au milieu de quarante-cinq blanches se verrait. */
+.cover {
+    position: relative;
+    aspect-ratio: 2 / 1;
+    overflow: hidden;
+    padding: 8% 7% 0;
+    background: #f6f8fa;
+}
+
+.cover__title {
+    margin: 0;
+    /* Calé sur la taille qu'a le titre dans la carte de GitHub à cette largeur de tuile :
+       un repli qui écrirait plus petit se repérerait au premier coup d'œil. */
+    font-size: clamp(0.95rem, 0.5rem + 1.6vw, 1.35rem);
+    font-weight: 700;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: #1f2328;
+    /* Les noms de dépôts sont longs et sans espaces, comme sur la carte qu'on imite. */
+    overflow-wrap: anywhere;
+}
+
+.cover__owner {
+    font-weight: 400;
+    color: #57606a;
+}
+
+.cover__language {
+    position: absolute;
+    left: 7%;
+    bottom: 8%;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #57606a;
+}
+
+/* La pastille de langage : la seule chose que le repli dit de plus que la carte. */
+.cover__language::before {
+    content: "";
+    display: inline-block;
+    width: 0.55rem;
+    height: 0.55rem;
+    margin-right: 0.35rem;
+    border-radius: 50%;
+    background: var(--cover-accent, var(--accent));
+}
+
+/* Posée par-dessus le repli, qu'elle recouvre entièrement quand elle arrive. Si elle
+   n'arrive pas, `onerror` la retire et le repli reste visible. */
+.cover__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* La carte de GitHub incruste l'avatar du compte en haut à droite, et aligne ses compteurs
+   en bas. Affichée telle quelle sur quarante-cinq vignettes, elle placarde le même visage
+   partout ; recadrée au centre, elle tranche la ligne des compteurs en deux.
+   On l'élargit donc de 39 % et on la cale en haut à gauche : le cadre, qui masque ce qui
+   dépasse, écarte la bande de droite — l'avatar y occupe de 76,7 % à 93,2 % de la largeur,
+   la colonne de titre s'arrêtant, elle, à 68 % au plus — et le bas de la carte, où
+   commencent les compteurs vers 72 % de la hauteur. Ces mesures viennent des cartes réelles :
+   toute retouche se vérifie à l'œil, en recadrant une carte, pas au calcul. */
+.cover__image--framed {
+    width: 139%;
+    object-position: left top;
+}
+
+/* Variante vitrine : une bande derrière le texte, et non une tuile. Elle reprend la teinte
+   du langage, car le titre du dépôt s'y affiche déjà en grand juste à côté. */
+.cover--fill {
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto;
+    padding: 0;
+    background:
+        linear-gradient(
+            var(--cover-angle, 45deg),
+            color-mix(in srgb, var(--cover-accent, var(--accent)) 38%, var(--bg-elevated)) 0%,
+            var(--bg-input) 62%
+        );
+}
+
+.cover--fill .cover__title,
+.cover--fill .cover__language {
+    display: none;
+}
+
+/* Variante fiche : une tuile à côté du titre, pas une bande pleine largeur. */
+.cover--card {
+    width: min(22rem, 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+}
+
+/* --- Métadonnées chiffrées ------------------------------------------------ */
+
+.facts {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* La pastille de langage reprend la convention de GitHub : une couleur unique suffit
+   ici, le site ne prétend pas rejouer la palette par langage. */
+.facts__item--language::before {
+    content: "";
+    display: inline-block;
+    width: 0.6rem;
+    height: 0.6rem;
+    margin-right: 0.35rem;
+    border-radius: 50%;
+    background: var(--accent);
+}
+
+/* --- Badges et sujets ----------------------------------------------------- */
+
+.badges,
+.tags,
+.shots,
+.site-footer__links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.15rem 0.45rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    color: var(--text-muted);
+}
+
+.badge--demo {
+    border-color: color-mix(in srgb, var(--success) 50%, var(--border-strong));
+    color: var(--success);
+}
+
+.badge--archived {
+    border-color: color-mix(in srgb, var(--warning) 50%, var(--border-strong));
+    color: var(--warning);
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.tag {
+    display: inline-block;
+    padding: 0.25rem 0.7rem;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.tag:hover {
+    color: var(--text);
+    border-color: var(--accent);
+    text-decoration: none;
+}
+
+/* --- Fiche dépôt ---------------------------------------------------------- */
+
+.breadcrumb {
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.repo__header {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.repo__intro {
+    flex: 1 1 20rem;
+}
+
+.repo__fullname {
+    margin-top: -0.75rem;
+    color: var(--text-muted);
+}
+
+.repo__tagline {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    max-width: 55ch;
+}
+
+.repo__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.repo__facts dt {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+}
+
+.repo__facts dd {
+    margin: 0;
+    font-size: 0.95rem;
+}
+
+.repo__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.repo__clone {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 1.5rem;
+    max-width: 34rem;
+}
+
+.repo__clone label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+}
+
+.repo__clone input {
+    width: 100%;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg-input);
+    color: var(--text);
+    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 0.85rem;
+}
+
+.repo__section {
+    margin-top: 3rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+}
+
+.repo__section h2 {
+    font-size: 1.2rem;
+}
+
+.repo__section p {
+    max-width: 70ch;
+}
+
+.shots {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+}
+
+.shots img {
+    width: 100%;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+}
+
+.prose {
+    max-width: 65ch;
+}
+
+.prose h2 {
+    margin-top: 2rem;
+    font-size: 1.2rem;
+}
+
+/* --- Pied de page --------------------------------------------------------- */
+
+.site-footer {
+    border-top: 1px solid var(--border);
+    padding-block: 1.75rem;
+    font-size: 0.875rem;
+    color: var(--text-muted);
+}
+
+.site-footer__inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.site-footer__text {
+    margin: 0;
+}
+
+.site-footer__links {
+    display: flex;
+    gap: 1.25rem;
+}
+
+/* --- Préférences d'accessibilité ------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration: 0.01ms !important;
+    }
+
+    .card:hover {
+        transform: none;
+    }
+}

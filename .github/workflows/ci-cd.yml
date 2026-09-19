@@ -1,0 +1,393 @@
+name: CI/CD
+
+# Les chemins ignorés sont exactement ceux que `.dockerignore` exclut de l'image *et* qui
+# ne pilotent pas le déploiement : ils ne peuvent donc changer ni ce qui est construit, ni
+# ce qui est déployé. `docker-compose.yml` et `.github/` sont hors image eux aussi, mais
+# décrivent le déploiement — ils continuent de déclencher. GitHub ne saute l'exécution que
+# si *tous* les fichiers poussés correspondent : un commit mêlant documentation et code
+# déclenche normalement.
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - ".claude/**"
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - ".claude/**"
+  workflow_dispatch:
+    inputs:
+      rollback_tag:
+        description: "Étiquette d'image à redéployer (SHA court). Vide = build normal."
+        required: false
+        type: string
+
+# Deux déploiements simultanés sur le même serveur se marcheraient dessus.
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: false
+
+# Le jeton n'a que les droits qu'on lui donne explicitement.
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  DOTNET_VERSION: "10.0.x"
+  DOTNET_NOLOGO: "true"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  test:
+    name: 🧪 Build & tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
+          cache-dependency-path: "**/*.csproj"
+
+      - name: Restore
+        run: dotnet restore src/Drangit.slnx
+
+      # Le projet impose `TreatWarningsAsErrors` : un avertissement fait échouer ici,
+      # pas trois semaines plus tard.
+      - name: Build
+        run: dotnet build src/Drangit.slnx --configuration Release --no-restore
+
+      - name: Format
+        run: dotnet format src/Drangit.slnx --verify-no-changes --no-restore
+
+      # Les tests tournent sur Microsoft.Testing.Platform (déclaré dans global.json).
+      # VSTest n'est plus dans la boucle : les options de rapport passent après `--`.
+      - name: Tests
+        run: |
+          dotnet test --solution src/Drangit.slnx \
+            --configuration Release \
+            --no-build \
+            -- \
+            --report-trx \
+            --coverage \
+            --coverage-output-format cobertura \
+            --results-directory ./artifacts/tests
+
+      - name: Publier les résultats de test
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results
+          path: ./artifacts/tests
+          retention-days: 14
+
+  # ---------------------------------------------------------------------------
+  build-image:
+    name: 🛠️ Image Docker
+    needs: test # ← rien ne se construit tant que la suite n'est pas verte
+    # Un retour arrière ne reconstruit rien : il redéploie une image déjà publiée.
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && inputs.rollback_tag == ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # publication sur GHCR avec le jeton natif, sans secret à gérer
+    outputs:
+      image_tag: ${{ steps.meta.outputs.short_sha }}
+      digest: ${{ steps.push.outputs.digest }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Connexion au registre
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Calculer les étiquettes
+        id: meta
+        run: |
+          short_sha="$(git rev-parse --short HEAD)"
+          echo "short_sha=${short_sha}" >> "$GITHUB_OUTPUT"
+          # Le nom de dépôt peut contenir des majuscules, pas une référence d'image.
+          echo "image=${REGISTRY}/$(echo "${IMAGE_NAME}" | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+      # Étiquette immuable par commit *en plus* de `latest` : sans elle, aucun retour
+      # arrière n'est possible et `docker pull latest` peut resservir l'ancienne image.
+      - name: Construire et publier
+        id: push
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.short_sha }}
+            ${{ steps.meta.outputs.image }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+
+      # L'image est éprouvée avant d'être déployée. `/health` ne suffit pas : la sonde est
+      # volontairement indépendante de GitHub, donc elle reste verte alors que toute page
+      # listant des dépôts répond 500. On demande donc les pages d'accueil elles-mêmes,
+      # sur l'image finale (ADR 0007).
+      - name: Éprouver l'image
+        env:
+          IMAGE: ${{ steps.meta.outputs.image }}:${{ steps.meta.outputs.short_sha }}
+        run: |
+          docker pull "$IMAGE"
+
+          # Aucun jeton n'entre dans cette étape : le site doit savoir se passer du réseau
+          # comme du quota. Le compte est volontairement inexistant — GitHub répond 404,
+          # aucun instantané n'existe, et l'application doit alors servir une vitrine vide
+          # sans faillir. C'est le pire cas ; s'il tient, le cas nominal tient aussi.
+          docker run --detach --name epreuve --publish 8080:8080 \
+            --env GitHub__Login=compte-inexistant-pour-verification \
+            --env Snapshot__Directory=/var/lib/drangit \
+            "$IMAGE"
+
+          # Les deux langues, car l'une peut casser sans l'autre — et non la racine, qui
+          # ne fait que rediriger vers l'une d'elles (ADR 0006).
+          echec=0
+          for page in /health /en/ /fr/; do
+            servie=""
+            for tentative in $(seq 1 20); do
+              code="$(curl -fsS -o /dev/null -w '%{http_code}' "http://localhost:8080${page}" || true)"
+              if [ "$code" = "200" ]; then
+                echo "L'image sert ${page} (tentative ${tentative})."
+                servie="oui"
+                break
+              fi
+              sleep 3
+            done
+
+            if [ -z "$servie" ]; then
+              echo "::error::L'image ne sert pas ${page} (dernier statut : ${code:-aucune réponse})."
+              echec=1
+              break
+            fi
+          done
+
+          # La racine est la porte d'entrée du site et ne répond pas 200 : elle oriente le
+          # visiteur vers sa langue (ADR 0006). Une image qui la servirait en 200, ou qui
+          # renverrait ailleurs que sous un préfixe, serait cassée sans que rien ci-dessus
+          # ne le voie.
+          if [ "$echec" = "0" ]; then
+            code="$(curl -sS -o /dev/null -w '%{http_code}' "http://localhost:8080/" || true)"
+            destination="$(curl -sS -o /dev/null -w '%{redirect_url}' "http://localhost:8080/" || true)"
+
+            case "${code}:${destination}" in
+              302:*/en/|302:*/fr/)
+                echo "La racine oriente vers ${destination}."
+                ;;
+              *)
+                echo "::error::La racine devrait orienter vers une langue (statut ${code:-aucun}, destination ${destination:-aucune})."
+                echec=1
+                ;;
+            esac
+          fi
+
+          if [ "$echec" != "0" ]; then
+            docker logs epreuve
+          fi
+
+          docker rm --force epreuve > /dev/null
+          exit "$echec"
+
+  # ---------------------------------------------------------------------------
+  deploy:
+    name: 🚀 Déploiement
+    needs: build-image
+    if: always() && github.ref == 'refs/heads/main' && (needs.build-image.result == 'success' || inputs.rollback_tag != '')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    environment:
+      name: production
+      url: ${{ vars.SITE_URL }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Choisir l'image et l'étiquette à déployer
+        id: target
+        run: |
+          tag="${{ inputs.rollback_tag }}"
+          if [ -z "$tag" ]; then
+            tag="${{ needs.build-image.outputs.image_tag }}"
+          fi
+
+          # Une référence d'image ne tolère pas les majuscules, un nom de dépôt si.
+          echo "image=${REGISTRY}/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "Déploiement de l'étiquette ${tag}"
+
+      # Le compose est la source de vérité du déploiement : il est copié à chaque fois,
+      # de sorte que le serveur ne diverge jamais du dépôt.
+      - name: Copier le compose sur le serveur
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: docker-compose.yml
+          target: ${{ vars.DEPLOY_PATH || '/opt/drangit' }}
+
+      - name: Déployer
+        uses: appleboy/ssh-action@v1.2.5
+        env:
+          IMAGE: ${{ steps.target.outputs.image }}
+          IMAGE_TAG: ${{ steps.target.outputs.tag }}
+          # Ni un secret ni une variable de dépôt ne peuvent s'appeler GITHUB_* : GitHub
+          # réserve ce préfixe. Les noms côté dépôt et côté runner sont donc en GH_*, et
+          # seul le fichier .env écrit plus bas porte les noms attendus par le compose.
+          GH_LOGIN: ${{ vars.GH_LOGIN || 'drangoht' }}
+          # Facultatif (ADR 0003). Absent, le site interroge l'API en anonyme.
+          GH_API_TOKEN: ${{ secrets.GH_API_TOKEN }}
+          GH_CACHE_DURATION: ${{ vars.GH_CACHE_DURATION || '00:30:00' }}
+          # 8080 et 8081 sont déjà occupés sur le serveur : le défaut du dépôt doit rester
+          # déployable sans qu'une variable GitHub ait à être définie quelque part.
+          HTTP_PORT: ${{ vars.HTTP_PORT || '8082' }}
+          SITE_NAME: ${{ vars.SITE_NAME || 'Drangit' }}
+          SITE_GITHUB_URL: ${{ vars.SITE_GITHUB_URL || 'https://github.com/drangoht' }}
+          SITE_ITCH_URL: ${{ vars.SITE_ITCH_URL || '' }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          # Les valeurs voyagent par l'environnement, pas interpolées dans le script :
+          # elles n'apparaissent donc jamais en clair dans la trace d'exécution.
+          envs: IMAGE,IMAGE_TAG,GH_LOGIN,GH_API_TOKEN,GH_CACHE_DURATION,HTTP_PORT,SITE_NAME,SITE_GITHUB_URL,SITE_ITCH_URL
+          script: |
+            set -euo pipefail
+            cd "${{ vars.DEPLOY_PATH || '/opt/drangit' }}"
+
+            echo "${{ secrets.GITHUB_TOKEN }}" \
+              | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
+
+            # Le `.env` est *dérivé* des secrets et variables du dépôt, pas maintenu à la
+            # main sur le serveur. Le serveur n'a ainsi aucune configuration propre à
+            # entretenir, et les pièges d'un fichier rédigé sous Windows — BOM, CRLF,
+            # mauvais répertoire — ne peuvent plus se produire.
+            # `printf` plutôt qu'un heredoc : les valeurs sont écrites telles quelles,
+            # sans qu'un `$` ou une apostrophe dans une clé ne soit réinterprété.
+            umask 077
+            {
+              printf 'IMAGE=%s\n'                 "$IMAGE"
+              printf 'IMAGE_TAG=%s\n'             "$IMAGE_TAG"
+              printf 'GITHUB_LOGIN=%s\n'          "$GH_LOGIN"
+              printf 'GITHUB_TOKEN=%s\n'          "${GH_API_TOKEN:-}"
+              printf 'GITHUB_CACHE_DURATION=%s\n' "$GH_CACHE_DURATION"
+              printf 'HTTP_PORT=%s\n'             "$HTTP_PORT"
+              printf 'SITE_NAME=%s\n'             "$SITE_NAME"
+              printf 'SITE_GITHUB_URL=%s\n'       "$SITE_GITHUB_URL"
+              printf 'SITE_ITCH_URL=%s\n'         "${SITE_ITCH_URL:-}"
+            } > .env
+            chmod 600 .env
+
+            # Compose v2 est requis. Sans ce contrôle, son absence se manifeste par un
+            # « unknown command: docker compose » qui ne dit pas quoi installer.
+            if ! docker compose version >/dev/null 2>&1; then
+              echo "ERREUR : le plugin Docker Compose v2 est absent de ce serveur."
+              echo "  La v1 autonome n'est pas prise en charge (hors support depuis juillet 2023)."
+              echo
+              echo "  Si Docker vient du dépôt officiel Docker :"
+              echo "    sudo apt-get update && sudo apt-get install -y docker-compose-plugin"
+              exit 1
+            fi
+
+            docker compose pull
+            # `up -d` recrée uniquement ce qui a changé — l'ancien conteneur ne s'arrête
+            # qu'une fois le nouveau prêt, au lieu d'un `stop`/`rm`/`run` à froid.
+            docker compose up -d --remove-orphans
+
+            # Un conteneur « créé » n'est pas un conteneur qui tourne : un port déjà pris
+            # laisserait sinon le déploiement passer pour réussi alors que le site est à terre.
+            if [ -z "$(docker compose ps --status running --quiet)" ]; then
+              echo "ERREUR : le conteneur ne tourne pas après le déploiement."
+              docker compose ps
+              docker compose logs --tail 40
+              exit 1
+            fi
+
+            # Sonde locale, depuis le serveur lui-même : elle sépare « l'application ne
+            # répond pas » de « la route publique ne mène pas jusqu'à elle ». Sans elle,
+            # une panne applicative et un reverse proxy mal configuré échouent de la même
+            # façon à l'étape suivante, sans rien dire de la cause.
+            # Une boucle explicite, et non les options de reprise de curl : Docker publie
+            # le port avant que Kestrel n'écoute, la connexion est donc acceptée puis
+            # refermée — un cas que `--retry-connrefused` ne rattrape pas.
+            sonde_reussie=""
+            for tentative in $(seq 1 15); do
+              if curl -fsS -o /dev/null --max-time 5 "http://localhost:${HTTP_PORT}/health"; then
+                echo "L'application répond sur le port ${HTTP_PORT} du serveur (tentative ${tentative})."
+                sonde_reussie="oui"
+                break
+              fi
+              sleep 2
+            done
+
+            if [ -z "$sonde_reussie" ]; then
+              echo "ERREUR : l'application ne répond pas sur le port ${HTTP_PORT} du serveur."
+              docker compose ps
+              docker compose logs --tail 40
+              exit 1
+            fi
+
+            docker logout ${{ env.REGISTRY }}
+
+            # Sans cela, le disque du VPS se remplit d'images obsolètes en quelques mois.
+            docker image prune -af --filter "until=168h"
+
+      # Un déploiement qui « réussit » sans que le site réponde n'est pas un déploiement.
+      - name: Vérifier que le site répond
+        env:
+          HTTP_PORT: ${{ vars.HTTP_PORT || '8082' }}
+        run: |
+          # `vars` et non `secrets` : une URL publique n'est pas un secret, et masquée en
+          # `***` dans la trace, elle rend le moindre diagnostic impossible.
+          url="${{ vars.SITE_URL || format('https://{0}', secrets.VPS_HOST) }}"
+          # La sonde *et* les pages d'accueil : /health n'interroge pas GitHub, il répond
+          # donc 200 alors que le catalogue est en erreur et que le site est inutilisable.
+          # Les deux langues, car l'une peut casser sans l'autre — et non la racine, qui
+          # ne fait que rediriger vers l'une d'elles.
+          for page in /health /en/ /fr/; do
+            servie=""
+            for attempt in $(seq 1 12); do
+              code="$(curl -fsS -o /dev/null -w '%{http_code}' "${url}${page}" || true)"
+              if [ "$code" = "200" ]; then
+                echo "${url}${page} répond (tentative ${attempt})."
+                servie="oui"
+                break
+              fi
+              echo "Tentative ${attempt} sur ${page} : statut ${code:-aucune réponse}, nouvel essai dans 5 s."
+              sleep 5
+            done
+
+            if [ -n "$servie" ]; then
+              continue
+            fi
+
+            echo "::error::Le site ne répond pas sur ${url}${page} après le déploiement."
+
+            if [ "$page" = "/health" ]; then
+              echo "L'application, elle, a répondu sur le port ${HTTP_PORT} du serveur à l'étape"
+              echo "précédente : chercher la cause entre le DNS, le reverse proxy et le certificat,"
+              echo "pas dans le conteneur. Le proxy doit pointer sur ce port de la machine hôte."
+            else
+              echo "La sonde /health répond : le proxy et le certificat sont hors de cause."
+              echo "L'application est démarrée mais ne parvient pas à rendre la page ; les"
+              echo "journaux du conteneur portent l'exception :"
+              echo "  docker compose -f ${{ vars.DEPLOY_PATH || '/opt/drangit' }}/docker-compose.yml logs --tail 100 web"
+            fi
+
+            exit 1
+          done

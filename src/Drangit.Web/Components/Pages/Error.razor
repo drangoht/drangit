@@ -1,0 +1,28 @@
+@page "/error"
+@using System.Diagnostics
+@inject IStringLocalizer<SharedResources> T
+@inject IOptions<SiteOptions> Site
+
+<PageTitle>@T["Error.Title"] — @Site.Value.Name</PageTitle>
+
+<h1 class="page-title">@T["Error.Title"]</h1>
+<p>@T["Error.Body"]</p>
+
+@if (RequestId is { Length: > 0 } requestId)
+{
+    @* Seul l'identifiant de corrélation est montré : le détail de l'exception reste
+       dans les journaux du serveur. *@
+    <p class="muted"><code>@string.Format(CultureInfo.CurrentCulture, T["Error.RequestId"].Value, requestId)</code></p>
+}
+
+<p><a class="button button--primary" href=".">@T["NotFound.Home"]</a></p>
+
+@code {
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private string? RequestId { get; set; }
+
+    protected override void OnInitialized() =>
+        RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+}

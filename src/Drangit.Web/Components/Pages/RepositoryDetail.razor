@@ -1,0 +1,206 @@
+@page "/repos/{slug}"
+@inject IRepositoryCatalog Catalog
+@inject IStringLocalizer<SharedResources> T
+@inject IOptions<SiteOptions> Site
+@inject NavigationManager Navigation
+
+@if (_repository is null)
+{
+    <PageTitle>@T["NotFound.Title"] — @Site.Value.Name</PageTitle>
+    <h1 class="page-title">@T["NotFound.Title"]</h1>
+    <p>@T["NotFound.Body"]</p>
+    <a class="button button--primary" href=".">@T["NotFound.Home"]</a>
+}
+else
+{
+    <PageTitle>@_repository.Name — @Site.Value.Name</PageTitle>
+    <SeoHead CanonicalPath="@($"/repos/{_repository.Slug.Value}")"
+             Title="@_repository.Name"
+             Description="@(Summary ?? _repository.FullName)"
+             ImageUrl="@_repository.ShowcaseImageUrl"
+             StructuredData="@StructuredData" />
+
+    <nav class="breadcrumb">
+        <a href=".">← @T["Repo.Breadcrumb"]</a>
+    </nav>
+
+    <article class="repo">
+        <header class="repo__header">
+            <RepositoryCover Repository="_repository" Class="cover--card" Eager="true" />
+
+            <div class="repo__intro">
+                <h1 class="page-title">@_repository.Name</h1>
+                <p class="repo__fullname"><code>@_repository.FullName</code></p>
+
+                @if (Summary is { } summary)
+                {
+                    <p class="repo__tagline">@summary</p>
+                }
+
+                @if (_repository.IsArchived)
+                {
+                    <p class="notice notice--warning">@T["Repo.ArchivedNotice"]</p>
+                }
+
+                <dl class="repo__facts">
+                    @if (_repository.Language is { } language)
+                    {
+                        <div>
+                            <dt>@T["Repo.Language"]</dt>
+                            <dd>@language</dd>
+                        </div>
+                    }
+
+                    <div>
+                        <dt>@T["Repo.Stars"]</dt>
+                        <dd>@_repository.Stars.ToString("N0", CultureInfo.CurrentCulture)</dd>
+                    </div>
+
+                    <div>
+                        <dt>@T["Repo.Forks"]</dt>
+                        <dd>@_repository.Forks.ToString("N0", CultureInfo.CurrentCulture)</dd>
+                    </div>
+
+                    <div>
+                        <dt>@T["Repo.License"]</dt>
+                        <dd>@(_repository.License ?? T["Repo.NoLicense"].Value)</dd>
+                    </div>
+
+                    @if (_repository.PushedAt is { } pushedAt)
+                    {
+                        <div>
+                            <dt>@T["Repo.UpdatedAt"]</dt>
+                            <dd>
+                                <time datetime="@pushedAt.ToString("O", CultureInfo.InvariantCulture)">
+                                    @pushedAt.ToString("d", CultureInfo.CurrentCulture)
+                                </time>
+                            </dd>
+                        </div>
+                    }
+
+                    @if (_repository.CreatedAt is { } createdAt)
+                    {
+                        <div>
+                            <dt>@T["Repo.CreatedAt"]</dt>
+                            <dd>
+                                <time datetime="@createdAt.ToString("O", CultureInfo.InvariantCulture)">
+                                    @createdAt.ToString("d", CultureInfo.CurrentCulture)
+                                </time>
+                            </dd>
+                        </div>
+                    }
+                </dl>
+
+                <div class="repo__actions">
+                    <a class="button button--primary" href="@_repository.HtmlUrl"
+                       rel="noopener noreferrer external" target="_blank">
+                        @T["Repo.ViewOnGitHub"]
+                    </a>
+
+                    @if (_repository.HomepageUrl is { } demo)
+                    {
+                        <a class="button button--ghost" href="@demo"
+                           rel="noopener noreferrer external" target="_blank">
+                            @T["Repo.Demo"]
+                        </a>
+                    }
+                </div>
+
+                <p class="repo__clone">
+                    <label for="clone">@T["Repo.Clone"]</label>
+                    @* En lecture seule plutôt qu'en simple texte : la commande se sélectionne
+                       d'un clic, et sans JavaScript — le site est rendu côté serveur. *@
+                    <input id="clone" type="text" readonly value="@CloneCommand" onfocus="this.select()" />
+                </p>
+            </div>
+        </header>
+
+        @if (_repository.Topics.Count > 0)
+        {
+            <section class="repo__section">
+                <h2>@T["Repo.Topics"]</h2>
+                <ul class="tags">
+                    @foreach (var topic in _repository.Topics)
+                    {
+                        <li><a class="tag" href="?topic=@Uri.EscapeDataString(topic)">@topic</a></li>
+                    }
+                </ul>
+            </section>
+        }
+
+        <section class="repo__section">
+            <h2>@T["Repo.About"]</h2>
+            @if (Description is { } description)
+            {
+                @* Le contenu éditorial est rédigé par nous et rendu en texte, pas en HTML :
+                   aucune balise saisie dans le fichier ne peut s'exécuter dans la page. *@
+                @foreach (var paragraph in SplitParagraphs(description))
+                {
+                    <p>@paragraph</p>
+                }
+            }
+            else
+            {
+                <p class="muted">@T["Repo.NoDescription"]</p>
+            }
+        </section>
+
+        @if (_repository.Screenshots.Count > 0)
+        {
+            <section class="repo__section">
+                <h2>@T["Repo.Screenshots"]</h2>
+                <ul class="shots">
+                    @foreach (var shot in _repository.Screenshots)
+                    {
+                        <li>
+                            <img src="@shot.Url" alt="@shot.Caption.For(CultureInfo.CurrentUICulture)"
+                                 loading="lazy" decoding="async" />
+                        </li>
+                    }
+                </ul>
+            </section>
+        }
+    </article>
+}
+
+@code {
+    private Repository? _repository;
+
+    /// <summary>Identifiant du dépôt dans l'URL.</summary>
+    [Parameter]
+    public string? Slug { get; set; }
+
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var repositories = await Catalog.GetRepositoriesAsync(HttpContext?.RequestAborted ?? CancellationToken.None);
+
+        _repository = repositories.FirstOrDefault(repository =>
+            string.Equals(repository.Slug.Value, Slug, StringComparison.OrdinalIgnoreCase));
+
+        // Un slug inconnu doit répondre 404, pas 200 avec un message : les moteurs de
+        // recherche indexeraient sinon des pages fantômes.
+        if (_repository is null && HttpContext is not null)
+        {
+            HttpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+        }
+    }
+
+    private string? Summary => _repository?.Description.For(CultureInfo.CurrentUICulture);
+
+    private string? Description => _repository?.LongDescription.For(CultureInfo.CurrentUICulture) ?? Summary;
+
+    /// <summary>Commande de clonage, en HTTPS : elle marche sans clé SSH configurée.</summary>
+    private string CloneCommand => $"git clone {_repository!.HtmlUrl}.git";
+
+    /// <summary>Fiche schema.org du dépôt, pour que le moteur en fasse un résultat enrichi.</summary>
+    private string StructuredData => RepositoryStructuredData.ToJsonLd(
+        _repository!,
+        new Uri(new Uri(Navigation.BaseUri), $"repos/{_repository!.Slug.Value}"),
+        Description ?? Summary);
+
+    private static IEnumerable<string> SplitParagraphs(string text) =>
+        text.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+}

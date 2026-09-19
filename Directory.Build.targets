@@ -1,0 +1,6 @@
+<Project>
+  <!-- La doc XML n'a de sens que sur le projet applicatif : les tests n'ont pas d'API publique. -->
+  <PropertyGroup Condition="'$(IsTestProject)' != 'true' AND !$(MSBuildProjectName.EndsWith('.Tests'))">
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+</Project>

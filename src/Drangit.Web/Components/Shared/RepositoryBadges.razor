@@ -1,0 +1,25 @@
+@inject IStringLocalizer<SharedResources> T
+
+@* Trois états qui changent la façon de lire un dépôt : il n'est plus maintenu, il n'est pas
+   de moi, il se voit sans rien installer. Le reste — étoiles, langage, dates — est chiffré
+   et vit dans les métadonnées, pas dans un badge. *@
+<ul class="badges">
+    @if (Repository.IsArchived)
+    {
+        <li><span class="badge badge--archived">@T["Repo.Archived"]</span></li>
+    }
+    @if (Repository.IsFork)
+    {
+        <li><span class="badge">@T["Repo.Fork"]</span></li>
+    }
+    @if (Repository.HasDemo)
+    {
+        <li><span class="badge badge--demo">@T["Repo.Demo"]</span></li>
+    }
+</ul>
+
+@code {
+    /// <summary>Dépôt dont on affiche l'état.</summary>
+    [Parameter, EditorRequired]
+    public required Repository Repository { get; set; }
+}

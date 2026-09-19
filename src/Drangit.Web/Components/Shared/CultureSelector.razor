@@ -1,0 +1,32 @@
+@inject IStringLocalizer<SharedResources> T
+@inject NavigationManager Navigation
+
+@* Depuis l'ADR 0006, la langue est portée par le chemin : changer de langue, c'est suivre
+   un lien vers la même page sous l'autre préfixe. Rien à mémoriser, rien à poster. *@
+<nav class="culture" aria-label="@T["Language.Label"]">
+    @foreach (var culture in SupportedCultures.All)
+    {
+        var isCurrent = string.Equals(
+            culture,
+            CultureInfo.CurrentUICulture.TwoLetterISOLanguageName,
+            StringComparison.OrdinalIgnoreCase);
+
+        @* Absolu, à dessein : ce lien quitte la base de la page pour celle de l'autre
+           langue, alors qu'un lien relatif y resterait. *@
+        <a class="culture__button @(isCurrent ? "culture__button--current" : null)"
+           href="/@culture/@CurrentPageWithinCulture"
+           hreflang="@culture"
+           lang="@culture"
+           aria-current="@(isCurrent ? "true" : null)">
+            @SupportedCultures.DisplayNameOf(culture)
+        </a>
+    }
+</nav>
+
+@code {
+    /// <summary>
+    /// Page courante vue depuis sa langue : ce qui suit le préfixe, critères de filtre
+    /// compris, pour que changer de langue ne renvoie pas à l'accueil.
+    /// </summary>
+    private string CurrentPageWithinCulture => Navigation.ToBaseRelativePath(Navigation.Uri);
+}

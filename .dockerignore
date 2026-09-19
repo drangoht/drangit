@@ -1,0 +1,16 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/.idea/
+**/.git/
+**/.gitignore
+**/.snapshots/
+**/*.user
+**/node_modules/
+docs/
+.github/
+README.md
+CLAUDE.md
+.claude/
+docker-compose*.yml

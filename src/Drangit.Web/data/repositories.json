@@ -1,0 +1,187 @@
+{
+  "$comment": [
+    "Contenu que l'API GitHub ne fournit pas : mise en vitrine, sujets ajoutés, description",
+    "longue, captures d'écran, traductions françaises, et les dépôts que le site ne montre pas.",
+    "",
+    "La clé est le slug du dépôt, c'est-à-dire son nom en minuscules :",
+    "https://github.com/drangoht/Algorithme-de-Huffman  ->  \"algorithme-de-huffman\".",
+    "",
+    "Tout est facultatif. Un dépôt absent de ce fichier s'affiche avec les seules données",
+    "GitHub ; une entrée partielle complète ces données sans jamais les effacer. Les slugs",
+    "qui ne correspondent à aucun dépôt public sont signalés au démarrage.",
+    "",
+    "POURQUOI CE FICHIER EST AUSSI FOURNI : un seul dépôt du compte porte des sujets sur",
+    "GitHub, et sept ont une description. Sans ces sujets-ci, la barre de filtres n'aurait",
+    "rien à proposer et chaque critère ne rendrait qu'un dépôt. Le vocabulaire ci-dessous est",
+    "donc délibérément restreint et partagé : un sujet n'a d'intérêt que s'il regroupe.",
+    "",
+    "  learning     suivi de cours, tutoriel, parcours d'exercices",
+    "  katas        exercice algorithmique ou de refactoring",
+    "  tdd          écrit en partant des tests",
+    "  poc          on vérifie qu'une technique marche, puis on s'arrête",
+    "  playground   bac à sable, sans intention de finir",
+    "  game-dev     jeu ou outillage de jeu",
+    "  unity        moteur Unity",
+    "  ai           assistants, agents, modèles",
+    "  llm          modèle de langage exécuté ou piloté",
+    "  claude-code  écrit avec Claude Code, ou à son sujet",
+    "  azure        services Azure",
+    "  web          front web",
+    "  api          API HTTP",
+    "  algorithms   structures de données et algorithmique",
+    "  tooling      outil pour soi, automatisation",
+    "  mobile       Android / iOS / Flutter",
+    "  messaging    files et bus de messages",
+    "",
+    "\"featured\": true désigne le dépôt de la vitrine, en haut de l'accueil. Sans désignation,",
+    "le site retient le dépôt actif le plus étoilé, puis le plus récemment poussé.",
+    "",
+    "\"hidden\": true retire le dépôt du site sans rien changer sur GitHub : c'est une décision",
+    "de présentation, pas de confidentialité.",
+    "",
+    "\"topics\" s'ajoute aux sujets déclarés sur GitHub, il ne les remplace pas.",
+    "",
+    "\"summary\" remplace la description courte, \"description\" alimente la fiche. Les sauts de",
+    "ligne y produisent des paragraphes distincts, et le texte est rendu en texte : aucune",
+    "balise saisie ici ne s'exécute dans la page."
+  ],
+
+  "repositories": {
+    "drangohtsgames": {
+      "featured": true,
+      "topics": ["game-dev", "web", "claude-code"],
+      "summary": {
+        "en": "Showcase site for my itch.io games — Blazor SSR, bilingual, self-hosted Web builds.",
+        "fr": "Site vitrine de mes jeux itch.io — Blazor SSR, bilingue, builds Web auto-hébergés."
+      },
+      "description": {
+        "en": "A .NET 10 site that lists the games published on itch.io. The catalogue comes from the itch.io API at runtime, cached, merged with a versioned editorial file and backed by an on-disk snapshot so the site keeps serving when the API is down.\nBuilt as an exercise in keeping a dependency at arm's length: a single folder speaks the itch.io vocabulary, and an architecture test makes sure no private account figure ever reaches a public page.",
+        "fr": "Un site .NET 10 qui liste les jeux publiés sur itch.io. Le catalogue vient de l'API itch.io au runtime, mis en cache, fusionné avec un fichier éditorial versionné et doublé d'un instantané sur disque pour que le site continue de répondre quand l'API tombe.\nÉcrit comme un exercice de mise à distance d'une dépendance : un seul dossier parle le vocabulaire d'itch.io, et un test d'architecture vérifie qu'aucun compteur privé du compte n'atteint jamais une page publique."
+      }
+    },
+
+    // — Jeux ——————————————————————————————————————————
+
+    "chimera-protocol": {
+      "topics": ["game-dev", "unity"],
+      "summary": {
+        "en": "Survivor-like where you graft pieces of the monsters you kill onto your own body.",
+        "fr": "Survivor-like où l'on greffe sur soi des morceaux des monstres que l'on abat."
+      }
+    },
+    "money-survivor": { "topics": ["game-dev", "unity"] },
+    "smilyvolley": { "topics": ["game-dev", "unity"] },
+    "snake-snack": { "topics": ["game-dev", "unity"] },
+    "unity-game-template-with-claude": {
+      "topics": ["game-dev", "unity", "tooling", "claude-code", "ai"],
+      "summary": {
+        "fr": "Gabarit de projet Unity préparé pour être mené avec Claude Code."
+      }
+    },
+    "asm-gameboy-firstprog": {
+      "topics": ["game-dev", "learning"],
+      "summary": {
+        "en": "First steps in Game Boy assembly.",
+        "fr": "Premiers pas en assembleur Game Boy."
+      }
+    },
+
+    // — Katas et algorithmique ——————————————————————————
+
+    "adventofcode": { "topics": ["katas", "algorithms"] },
+    "codingame": { "topics": ["katas", "algorithms"] },
+    "bankingkata": { "topics": ["katas", "tdd"] },
+    "socialnetworkkata": { "topics": ["katas", "tdd"] },
+    "gildedrosesbis": { "topics": ["katas", "tdd"] },
+    "doityourself": { "topics": ["katas"] },
+    "algorithme-de-huffman": {
+      "topics": ["algorithms", "web"],
+      "summary": {
+        "en": "Huffman coding, implemented and made playable in the browser.",
+        "fr": "Le codage de Huffman, implémenté et rendu manipulable dans le navigateur."
+      }
+    },
+    "huffman-algorithm-flutter": {
+      "topics": ["algorithms", "mobile"],
+      "summary": {
+        "en": "The same Huffman coding, ported to Flutter.",
+        "fr": "Le même codage de Huffman, porté sur Flutter."
+      }
+    },
+
+    // — Apprentissage —————————————————————————————————
+
+    "go-training": {
+      "topics": ["learning"],
+      "summary": { "fr": "Parcours d'entraînement Go : douze exercices guidés par les tests." }
+    },
+    "rust-atelier": {
+      "topics": ["learning", "tdd"],
+      "summary": { "fr": "Atelier d'apprentissage Rust : workspace Cargo et exercices progressifs." }
+    },
+    "rust-training": { "topics": ["learning"] },
+    "netcore_tdd_training": { "topics": ["learning", "tdd"] },
+    "claude-csharp-training": { "topics": ["learning", "claude-code", "ai"] },
+    "github-training": { "topics": ["learning", "tooling"] },
+    "flutter_tutorials": { "topics": ["learning", "mobile"] },
+    "nextjs-training": { "topics": ["learning", "web"] },
+    "nextjs-training-board": { "topics": ["learning", "web"] },
+    "vuejs-training": { "topics": ["learning", "web"] },
+    "snapface": { "topics": ["learning", "web"] },
+    "thearenaproject": { "topics": ["learning", "web"] },
+    "simpleimageuploader_devchallenges.io": { "topics": ["learning", "web"] },
+
+    // — POC et bacs à sable ———————————————————————————
+
+    "eventsourcingpoc": { "topics": ["poc"] },
+    "mediatrpoc": { "topics": ["poc"] },
+    "azureservicebuspoc": { "topics": ["poc", "azure", "messaging"] },
+    "masstransitazuresb": { "topics": ["poc", "azure", "messaging"] },
+    "azureminimalapiefcore": { "topics": ["poc", "azure", "api"] },
+    "fruitapi": { "topics": ["poc", "api"] },
+    "identityjwtsample": { "topics": ["poc", "api"] },
+    "validatorsample": { "topics": ["poc"] },
+    "verifyplayground": { "topics": ["playground", "tdd"] },
+    "benchmark.practice": { "topics": ["playground", "poc"] },
+    "cursor-playground": { "topics": ["playground", "ai"] },
+    "sqlscript-scenario": { "topics": ["poc", "tooling"] },
+    "drangoht-designpatterncsharpparclaudeai": {
+      "topics": ["poc", "ai", "claude-code"],
+      "summary": {
+        "en": "The GoF catalogue in C#, written end to end by an assistant.",
+        "fr": "Le catalogue du GoF en C#, écrit de bout en bout par un assistant."
+      }
+    },
+
+    // — IA ————————————————————————————————————————
+
+    "local-llm-mcp": {
+      "topics": ["ai", "llm", "tooling"],
+      "summary": {
+        "en": "An MCP server that hands heavy reading to a local model instead of the cloud.",
+        "fr": "Un serveur MCP qui confie les lectures volumineuses à un modèle local plutôt qu'au cloud."
+      }
+    },
+    "localllmwithdotnet": { "topics": ["ai", "llm", "poc"] },
+    "agency-multi-agent": { "topics": ["ai", "llm", "poc"] },
+    "apitoappgenerator": {
+      "topics": ["ai", "tooling", "web", "api"],
+      "summary": {
+        "en": "Generates a working front end from an API description.",
+        "fr": "Génère une interface fonctionnelle à partir de la description d'une API."
+      }
+    },
+    "highfrequencytrading-educational-gpt": { "topics": ["ai", "llm", "learning"] },
+
+    // — Retirés du site ———————————————————————————————
+
+    "drangoht": {
+      "hidden": true,
+      "$comment": "Dépôt de profil GitHub : il ne contient qu'un README, il n'a rien à faire dans une vitrine."
+    },
+    "github-stats": {
+      "hidden": true,
+      "$comment": "Automatisation des cartes de statistiques du profil, sans intérêt hors de GitHub."
+    }
+  }
+}

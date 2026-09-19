@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="@CultureInfo.CurrentUICulture.TwoLetterISOLanguageName">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark light" />
+    @* La base porte le préfixe de langue (ADR 0006) : tous les liens internes sont
+       relatifs et se résolvent contre elle, donc ils restent dans la langue de la page. *@
+    <base href="@BaseHref" />
+    <ResourcePreloader />
+    <link rel="stylesheet" href="@Assets["app.css"]" />
+    @* La feuille des styles isolés (Drangit.Web.styles.css) n'est pas référencée : aucun
+       composant n'a de fichier .razor.css, donc elle n'est jamais produite et le navigateur
+       récolterait un 404 à chaque page. La rétablir en même temps que le premier
+       .razor.css — sans elle, ses styles ne s'appliqueraient pas. *@
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>" />
+    <ImportMap />
+    <HeadOutlet />
+</head>
+
+<body>
+    <Routes />
+    <script src="@Assets["_framework/blazor.web.js"]"></script>
+</body>
+
+</html>
+
+@code {
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    /// <summary>
+    /// Base de résolution des liens de la page, préfixe de langue compris. Elle se termine
+    /// par une barre oblique, sans quoi le dernier segment serait remplacé et non prolongé.
+    /// </summary>
+    private string BaseHref => new Uri(Navigation.BaseUri).AbsolutePath;
+}

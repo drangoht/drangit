@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build:*)",
+      "Bash(dotnet test:*)",
+      "Bash(dotnet format:*)",
+      "Bash(dotnet restore:*)",
+      "Bash(dotnet list:*)",
+      "Bash(dotnet run --project tests/Drangit.Tests:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Read(./**/appsettings.*.json)",
+      "Read(./**/.env)",
+      "Read(./**/*.pfx)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'case \"$CLAUDE_FILE_PATHS\" in *.cs) dotnet format --include $CLAUDE_FILE_PATHS --no-restore 2>/dev/null || true ;; esac'"
+          }
+        ]
+      }
+    ]
+  }
+}

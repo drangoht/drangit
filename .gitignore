@@ -1,0 +1,10 @@
+bin/
+obj/
+.vs/
+.vscode/
+.idea/
+*.user
+.snapshots/
+*.received.*
+[Tt]est[Rr]esult*/
+.env

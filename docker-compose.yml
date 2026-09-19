@@ -1,0 +1,50 @@
+services:
+  web:
+    # L'image est identifiée par une étiquette immuable poussée par la CI (`IMAGE_TAG`),
+    # pas par `latest` : sur le serveur, on sait exactement quelle version tourne, et
+    # revenir en arrière consiste à changer une variable.
+    image: ${IMAGE:-ghcr.io/drangoht/drangit}:${IMAGE_TAG:-latest}
+    container_name: drangit
+    restart: unless-stopped
+
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      # Le double tiret bas est la convention .NET pour descendre dans une section.
+      GitHub__Login: ${GITHUB_LOGIN:-drangoht}
+      # Facultatif (ADR 0003) : sans jeton, l'API anonyme accorde 60 requêtes par heure,
+      # ce que le cache et l'instantané absorbent sans peine.
+      GitHub__Token: ${GITHUB_TOKEN:-}
+      GitHub__CacheDuration: ${GITHUB_CACHE_DURATION:-00:30:00}
+      Snapshot__Directory: /var/lib/drangit
+      Site__Name: ${SITE_NAME:-Drangit}
+      Site__GitHubUrl: ${SITE_GITHUB_URL:-https://github.com/drangoht}
+      Site__ItchProfileUrl: ${SITE_ITCH_URL:-}
+
+    volumes:
+      # Le dernier catalogue connu survit aux redéploiements — c'est justement lors d'un
+      # redémarrage, cache mémoire vidé, qu'un quota épuisé ferait le plus mal.
+      - snapshot:/var/lib/drangit
+
+    ports:
+      # 8080 côté conteneur : c'est le port sur lequel le Dockerfile fait écouter Kestrel
+      # (`ASPNETCORE_HTTP_PORTS`). Côté hôte, 8080 et 8081 sont déjà pris sur le serveur —
+      # le défaut vaut donc 8082, et `HTTP_PORT` reste là pour en changer sans toucher au code.
+      - "${HTTP_PORT:-8082}:8080"
+
+    # Durcissement : l'application n'écrit que dans son volume d'instantané.
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  snapshot:

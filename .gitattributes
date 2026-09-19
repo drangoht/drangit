@@ -1,0 +1,8 @@
+# Fins de ligne normalisées en LF dans le dépôt : la CI tourne sur Linux, et
+# `dotnet format --verify-no-changes` échouerait sur des CRLF convertis au checkout.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.keystore binary

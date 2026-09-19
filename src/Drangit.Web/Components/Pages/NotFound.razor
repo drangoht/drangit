@@ -1,0 +1,10 @@
+@page "/not-found"
+@layout MainLayout
+@inject IStringLocalizer<SharedResources> T
+@inject IOptions<SiteOptions> Site
+
+<PageTitle>@T["NotFound.Title"] — @Site.Value.Name</PageTitle>
+
+<h1 class="page-title">@T["NotFound.Title"]</h1>
+<p>@T["NotFound.Body"]</p>
+<p><a class="button button--primary" href=".">@T["NotFound.Home"]</a></p>

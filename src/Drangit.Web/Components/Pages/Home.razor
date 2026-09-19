@@ -1,0 +1,283 @@
+@page "/"
+@using Microsoft.AspNetCore.WebUtilities
+@inject IRepositoryCatalog Catalog
+@inject IStringLocalizer<SharedResources> T
+@inject IOptions<SiteOptions> Site
+
+<PageTitle>@Site.Value.Name</PageTitle>
+@* Pas d'ImageUrl : l'accueil représente le site, pas le dépôt qui passe en vitrine.
+   SeoHead pose donc l'image du site. *@
+<SeoHead CanonicalPath="/"
+         Title="@Site.Value.Name"
+         Description="@T["Home.Intro"]" />
+
+<h1 class="page-title">@T["Home.Title"]</h1>
+<p class="page-intro">@T["Home.Intro"]</p>
+
+@if (_allRepositories.Count == 0)
+{
+    <p class="notice notice--warning" role="status">@T["Home.Unavailable"]</p>
+}
+else
+{
+    @* La vitrine ne s'affiche pas sous filtre : elle doublonnerait les résultats. *@
+    @if (Hero is { } hero)
+    {
+        <article class="hero">
+            <RepositoryCover Repository="hero" Class="cover--fill" Eager="true" UsePreviewCard="false" />
+            <div class="hero__body">
+                <p class="hero__eyebrow">@T["Home.Featured"]</p>
+                <h2 class="hero__title">@hero.Name</h2>
+                @if (hero.Description.For(CultureInfo.CurrentUICulture) is { } description)
+                {
+                    <p class="hero__tagline">@description</p>
+                }
+                <div class="hero__actions">
+                    @if (hero.HomepageUrl is { } demo)
+                    {
+                        <a class="button button--primary" href="@demo" rel="noopener noreferrer external" target="_blank">
+                            @T["Repo.Demo"]
+                        </a>
+                    }
+                    <a class="button button--ghost" href="repos/@hero.Slug.Value">@T["Home.SeeRepository"]</a>
+                </div>
+            </div>
+        </article>
+    }
+
+    @* Les critères sont des liens : une sélection produit une URL partageable et le tri
+       fonctionne sans JavaScript — condition d'un rendu serveur statique. *@
+    <section class="filters" aria-label="@T["Filter.Legend"]">
+        <ul class="chips">
+            <li>
+                <a class="chip @(_filter.IsActive ? null : "chip--on")" href=".">@T["Filter.All"]</a>
+            </li>
+            @* Une bascule qui ne partage pas le catalogue en deux ne sert à rien : elle
+               renverrait soit la liste entière, soit rien. On ne la propose donc que
+               lorsqu'elle a un effet. *@
+            @if (_demoCount > 0 && _demoCount < _allRepositories.Count)
+            {
+                <li>
+                    <a class="chip @(WithDemoOnly ? "chip--on" : null)" href="@HrefTogglingDemo()">
+                        @T["Filter.WithDemo"] <span class="chip__count">@_demoCount</span>
+                    </a>
+                </li>
+            }
+            @if (_archivedCount > 0 && _archivedCount < _allRepositories.Count)
+            {
+                <li>
+                    <a class="chip @(ArchivedHidden ? "chip--on" : null)" href="@HrefTogglingArchived()">
+                        @T["Filter.HideArchived"] <span class="chip__count">@_archivedCount</span>
+                    </a>
+                </li>
+            }
+            @foreach (var topic in ListedTopics)
+            {
+                <li>
+                    <a class="chip @(IsSelected(Topic, topic.Value) ? "chip--on" : null)"
+                       href="@HrefWithTopic(IsSelected(Topic, topic.Value) ? null : topic.Value)">
+                        @topic.Value <span class="chip__count">@topic.Count</span>
+                    </a>
+                </li>
+            }
+        </ul>
+
+        @* Recherche et langage demandent une saisie ou une liste : ils restent un formulaire
+           GET. Les critères déjà posés voyagent en champs cachés pour ne pas être perdus. *@
+        <form method="get" class="filters__form" role="search">
+            <input type="hidden" name="topic" value="@Topic" />
+            @if (WithDemoOnly)
+            {
+                <input type="hidden" name="demo" value="true" />
+            }
+            @if (ArchivedHidden)
+            {
+                <input type="hidden" name="active" value="true" />
+            }
+
+            <div class="filters__field filters__field--grow">
+                <label for="q">@T["Filter.Search"]</label>
+                <input type="search" id="q" name="q" value="@Search"
+                       placeholder="@T["Filter.SearchPlaceholder"]" autocomplete="off" />
+            </div>
+
+            <div class="filters__field">
+                <label for="lang">@T["Filter.Language"]</label>
+                <select id="lang" name="lang">
+                    <option value="">@T["Filter.Any"]</option>
+                    @foreach (var language in _availableLanguages)
+                    {
+                        <option value="@language.Value" selected="@IsSelected(Language, language.Value)">
+                            @language.Value (@language.Count)
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <div class="filters__actions">
+                <button type="submit" class="button button--primary">@T["Filter.Apply"]</button>
+            </div>
+        </form>
+    </section>
+
+    <p class="results-count" role="status">
+        @(_visibleRepositories.Count == 1
+            ? T["Home.RepoCountOne"].Value
+            : string.Format(CultureInfo.CurrentCulture, T["Home.RepoCount"].Value, _visibleRepositories.Count))
+    </p>
+
+    @if (_visibleRepositories.Count == 0)
+    {
+        <p class="notice">@T["Home.EmptyFiltered"]</p>
+    }
+    else
+    {
+        <ul class="grid">
+            @foreach (var repository in Listed)
+            {
+                <li class="grid__item">
+                    <RepositoryCard Repository="repository" />
+                </li>
+            }
+        </ul>
+    }
+}
+
+@code {
+    /// <summary>
+    /// Nombre de sujets proposés en filtre.
+    /// </summary>
+    /// <remarks>
+    /// Un compte GitHub actif cumule vite cinquante sujets distincts : les afficher tous
+    /// ferait une barre de filtres plus haute que la grille qu'elle filtre. Les sujets sont
+    /// triés par fréquence, donc cette coupe garde ceux qui décrivent le compte. Un sujet
+    /// hors liste reste atteignable : la fiche d'un dépôt le propose en lien.
+    /// </remarks>
+    private const int MaxListedTopics = 12;
+
+    private IReadOnlyList<Repository> _allRepositories = [];
+    private IReadOnlyList<Repository> _visibleRepositories = [];
+    private IReadOnlyList<RepositoryFacet> _availableTopics = [];
+    private IReadOnlyList<RepositoryFacet> _availableLanguages = [];
+    private int _demoCount;
+    private int _archivedCount;
+    private RepositoryFilter _filter = RepositoryFilter.Empty;
+
+    /// <summary>Contexte de la requête en cours, fourni par le rendu serveur statique.</summary>
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    [SupplyParameterFromQuery(Name = "q")]
+    private string? Search { get; set; }
+
+    [SupplyParameterFromQuery(Name = "topic")]
+    private string? Topic { get; set; }
+
+    [SupplyParameterFromQuery(Name = "lang")]
+    private string? Language { get; set; }
+
+    [SupplyParameterFromQuery(Name = "demo")]
+    private string? Demo { get; set; }
+
+    [SupplyParameterFromQuery(Name = "active")]
+    private string? Active { get; set; }
+
+    private bool WithDemoOnly => bool.TryParse(Demo, out var demo) && demo;
+
+    private bool ArchivedHidden => bool.TryParse(Active, out var active) && active;
+
+    /// <summary>Dépôt de la vitrine, absent dès qu'un critère est posé.</summary>
+    private Repository? Hero => _filter.IsActive ? null : FeaturedRepository.Of(_allRepositories);
+
+    /// <summary>
+    /// Sujets proposés en filtre : les plus fréquents, plus celui qui est sélectionné.
+    /// </summary>
+    /// <remarks>
+    /// Sans ce rattrapage, un sujet rare atteint depuis une fiche s'appliquerait sans
+    /// apparaître dans la barre — impossible de le désélectionner autrement qu'en revenant
+    /// à « Tout », ce qui effacerait aussi la recherche.
+    /// </remarks>
+    private IEnumerable<RepositoryFacet> ListedTopics
+    {
+        get
+        {
+            var listed = _availableTopics.Take(MaxListedTopics).ToList();
+
+            if (Topic is not { Length: > 0 } selected
+                || listed.Any(facet => IsSelected(selected, facet.Value)))
+            {
+                return listed;
+            }
+
+            return _availableTopics.FirstOrDefault(facet => IsSelected(selected, facet.Value)) is { } rare
+                ? listed.Append(rare)
+                : listed;
+        }
+    }
+
+    /// <summary>Dépôts de la grille : le dépôt en vitrine n'y est pas répété.</summary>
+    private IEnumerable<Repository> Listed =>
+        Hero is { } hero ? _visibleRepositories.Where(repository => repository != hero) : _visibleRepositories;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _allRepositories = await Catalog.GetRepositoriesAsync(HttpContext?.RequestAborted ?? CancellationToken.None);
+        _availableTopics = RepositoryFilter.AvailableTopicsOf(_allRepositories);
+        _availableLanguages = RepositoryFilter.AvailableLanguagesOf(_allRepositories);
+        _demoCount = RepositoryFilter.CountWithDemo(_allRepositories);
+        _archivedCount = RepositoryFilter.CountArchived(_allRepositories);
+
+        _filter = new RepositoryFilter
+        {
+            SearchTerm = Search,
+            Topic = Topic,
+            Language = Language,
+            WithDemo = WithDemoOnly,
+            HideArchived = ArchivedHidden,
+        };
+
+        _visibleRepositories = _filter.Apply(_allRepositories);
+    }
+
+    private string HrefWithTopic(string? topic) => Href(topic, WithDemoOnly, ArchivedHidden);
+
+    private string HrefTogglingDemo() => Href(Topic, !WithDemoOnly, ArchivedHidden);
+
+    private string HrefTogglingArchived() => Href(Topic, WithDemoOnly, !ArchivedHidden);
+
+    /// <summary>
+    /// Compose l'URL de la page en remplaçant un seul critère : cliquer sur un sujet ne doit
+    /// pas effacer la recherche ni le langage déjà choisis.
+    /// </summary>
+    private string Href(string? topic, bool demo, bool hideArchived)
+    {
+        var query = new Dictionary<string, string?>(StringComparer.Ordinal);
+
+        AddIfSet(query, "q", Search);
+        AddIfSet(query, "topic", topic);
+        AddIfSet(query, "lang", Language);
+
+        if (demo)
+        {
+            query["demo"] = "true";
+        }
+
+        if (hideArchived)
+        {
+            query["active"] = "true";
+        }
+
+        return QueryHelpers.AddQueryString(".", query);
+    }
+
+    private static void AddIfSet(Dictionary<string, string?> query, string name, string? value)
+    {
+        if (!string.IsNullOrWhiteSpace(value))
+        {
+            query[name] = value;
+        }
+    }
+
+    private static bool IsSelected(string? current, string candidate) =>
+        string.Equals(current, candidate, StringComparison.OrdinalIgnoreCase);
+}

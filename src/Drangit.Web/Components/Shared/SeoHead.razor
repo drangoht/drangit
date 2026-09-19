@@ -1,0 +1,104 @@
+@inject NavigationManager Navigation
+@inject IOptions<SiteOptions> Site
+
+@* Ce que la page dit d'elle-même aux moteurs de recherche et aux aperçus de partage.
+   Tout passe par ici, et pas seulement pour éviter d'oublier une balise : plusieurs
+   <HeadContent> sur une même page ne s'additionnent pas, le dernier rendu efface les
+   précédents. Une page qui porte ce composant ne doit donc pas en déclarer un second. *@
+<HeadContent>
+    @* Une page indexable désigne son adresse de référence : les filtres de l'accueil et
+       les paramètres de campagne produisent sinon autant de copies indexées. *@
+    <link rel="canonical" href="@CanonicalUrl" />
+
+    @* Chaque version désigne toutes les versions, la sienne comprise : la réciprocité est
+       la condition pour que le groupe soit pris en compte, et son absence ne se signale
+       nulle part. « x-default » répond au visiteur dont la langue n'est ni l'une ni l'autre. *@
+    @foreach (var culture in SupportedCultures.All)
+    {
+        <link rel="alternate" hreflang="@culture" href="@UrlIn(culture)" />
+    }
+    <link rel="alternate" hreflang="x-default" href="@UrlIn(SupportedCultures.Default)" />
+
+    <meta name="description" content="@Description" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="@Site.Value.Name" />
+    <meta property="og:url" content="@CanonicalUrl" />
+    <meta property="og:title" content="@Title" />
+    <meta property="og:description" content="@Description" />
+    <meta property="og:locale" content="@CurrentCulture" />
+
+    @foreach (var culture in SupportedCultures.All.Where(other => other != CurrentCulture))
+    {
+        <meta property="og:locale:alternate" content="@culture" />
+    }
+
+    @* Une page a toujours une illustration de partage : la sienne si elle en a une, celle du
+       site sinon. Jamais la carte de GitHub, qui incruste l'avatar du compte — dans une page
+       du site on la recadre, mais un aperçu s'affiche chez autrui, où rien ne la recadre. *@
+    <meta property="og:image" content="@ShareImageUrl" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    @if (StructuredData is not null)
+    {
+        @* Le document est produit par un sérialiseur JSON, qui échappe « < » et « > » :
+           un titre venu de GitHub ne peut pas refermer la balise. *@
+        <script type="application/ld+json">@((MarkupString)StructuredData)</script>
+    }
+</HeadContent>
+
+@code {
+    /// <summary>Chemin de référence de la page, racine du site comprise.</summary>
+    [Parameter, EditorRequired]
+    public required string CanonicalPath { get; set; }
+
+    /// <summary>Titre de la page dans un aperçu de partage.</summary>
+    [Parameter, EditorRequired]
+    public required string Title { get; set; }
+
+    /// <summary>Résumé de la page, repris en méta-description et dans l'aperçu.</summary>
+    [Parameter, EditorRequired]
+    public required string Description { get; set; }
+
+    /// <summary>
+    /// Illustration propre à la page ; à défaut, celle du site est employée.
+    /// </summary>
+    [Parameter]
+    public Uri? ImageUrl { get; set; }
+
+    /// <summary>Document JSON-LD décrivant la page, quand elle a de quoi en produire un.</summary>
+    [Parameter]
+    public string? StructuredData { get; set; }
+
+    /// <summary>
+    /// Adresse absolue de la page, construite depuis l'hôte réellement demandé.
+    /// </summary>
+    private string CanonicalUrl =>
+        new Uri(new Uri(Navigation.BaseUri), CanonicalPath.TrimStart('/')).ToString();
+
+    private static string CurrentCulture => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+
+    /// <summary>Adresse de cette même page dans une autre langue.</summary>
+    /// <remarks>
+    /// Construite depuis la racine du site : la base de la page porte déjà une langue, et
+    /// s'en servir empilerait les préfixes.
+    /// </remarks>
+    private string UrlIn(string culture) =>
+        new Uri(
+            CulturePath.SiteRootOf(new Uri(Navigation.BaseUri)),
+            $"{culture}{CanonicalPath}").ToString();
+
+    /// <summary>
+    /// Illustration de l'aperçu de partage, en adresse absolue.
+    /// </summary>
+    /// <remarks>
+    /// Le repli du site est construit depuis la racine et non depuis la base de la page :
+    /// celle-ci porte un préfixe de langue, et une même image n'a pas à exister en deux
+    /// adresses. Son nom est empreinté par <c>MapStaticAssets</c>, donc le cache d'un réseau
+    /// social ne resservira pas l'ancienne après un changement.
+    /// </remarks>
+    private string ShareImageUrl =>
+        ImageUrl?.ToString()
+        ?? new Uri(
+            CulturePath.SiteRootOf(new Uri(Navigation.BaseUri)),
+            Assets["og-share.png"]).ToString();
+}
