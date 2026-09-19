@@ -1,13 +1,14 @@
 @* Illustration d'un dépôt, en deux couches.
 
-   Dessous, un repli dessiné qui imite la carte de GitHub — même fond très clair, même titre
-   en haut à gauche. Dessus, la vraie image : la capture du fichier éditorial si elle existe,
-   sinon la carte de GitHub elle-même.
+   Dessous, une vignette dessinée : la teinte vient du langage, l'inclinaison du dégradé du
+   nom, et le nom complet s'y écrit comme une ligne de terminal — le compte en retrait, le
+   dépôt en clair. Dessus, la capture du fichier éditorial s'il y en a une, qui montre le
+   projet lui-même.
 
-   Les deux couches plutôt qu'un choix entre les deux : quand une image manque à l'appel, le
-   visiteur voit une tuile de même facture au lieu d'une icône cassée, et la grille garde une
-   allure d'ensemble. C'est tout l'objet du repli — s'il détonnait, il vaudrait mieux ne rien
-   afficher du tout. *@
+   La carte que GitHub produit par dépôt n'entre pas ici : elle réécrit le nom, la
+   description et les compteurs, déjà affichés juste en dessous ; quarante-cinq d'entre
+   elles font un mur de rectangles clairs identiques ; et chacune coûte une requête vers un
+   tiers. Le site la refusait déjà en vitrine — il la refuse partout (ADR-0009). *@
 <div class="cover @Class" style="@RepositoryVisual.StyleOf(Repository)">
     @* Décoratif : le nom et le langage sont déjà écrits en toutes lettres sous la vignette.
        Un lecteur d'écran les entendrait deux fois. *@
@@ -20,12 +21,12 @@
         <span class="cover__language" aria-hidden="true">@language</span>
     }
 
-    @if (Image is { } image)
+    @if (Screenshot is { } image)
     {
         @* onerror est le seul moyen, sans JavaScript de page, de retirer une image qui n'a
            pas répondu : sans lui, le navigateur laisse son icône de fichier cassé par-dessus
-           le repli. Une ligne de DOM, pas d'interactivité Blazor. *@
-        <img class="cover__image @(IsPreviewCard ? "cover__image--framed" : null)" src="@image" alt=""
+           la vignette. Une ligne de DOM, pas d'interactivité Blazor. *@
+        <img class="cover__image" src="@image" alt=""
              loading="@(Eager ? "eager" : "lazy")"
              fetchpriority="@(Eager ? "high" : null)"
              decoding="async" width="640" height="320"
@@ -52,18 +53,7 @@
     [Parameter]
     public bool Eager { get; set; }
 
-    /// <summary>
-    /// Autorise la carte produite par GitHub à servir d'illustration.
-    /// </summary>
-    /// <remarks>
-    /// La vitrine la refuse : son cadre est bien plus large que haut, et le recadrage qui
-    /// écarte l'avatar y couperait le titre de la carte. Elle affiche donc le repli — le nom
-    /// et la description du dépôt y sont déjà écrits en grand, la carte n'apporterait rien.
-    /// </remarks>
-    [Parameter]
-    public bool UsePreviewCard { get; set; } = true;
-
-    /// <summary>Compte propriétaire, barre oblique comprise, tel que la carte l'écrit.</summary>
+    /// <summary>Compte propriétaire, barre oblique comprise.</summary>
     private string Owner =>
         Repository.FullName.LastIndexOf('/') is var separateur && separateur > 0
             ? Repository.FullName[..(separateur + 1)]
@@ -72,14 +62,4 @@
     /// <summary>Capture d'écran déclarée dans le fichier éditorial, s'il y en a une.</summary>
     private Uri? Screenshot =>
         Repository.Screenshots.Count > 0 ? Repository.Screenshots[0].Url : null;
-
-    /// <summary>
-    /// Image posée par-dessus le repli : la capture éditoriale, à défaut la carte de GitHub.
-    /// </summary>
-    private Uri? Image => Screenshot ?? (UsePreviewCard ? Repository.PreviewImageUrl : null);
-
-    /// <summary>
-    /// Indique que l'image affichée est la carte de GitHub, qui demande un recadrage.
-    /// </summary>
-    private bool IsPreviewCard => Screenshot is null && Image is not null;
 }

@@ -122,6 +122,12 @@
   <data name="Filter.Apply" xml:space="preserve">
     <value>Appliquer</value>
   </data>
+  <data name="Prompt.Label" xml:space="preserve">
+    <value>Ligne de commande</value>
+  </data>
+  <data name="Prompt.Placeholder" xml:space="preserve">
+    <value>un nom à chercher, ou --topic=unity, open &lt;dépôt&gt;, cd about</value>
+  </data>
   <data name="Repo.Stars" xml:space="preserve">
     <value>Étoiles</value>
   </data>
@@ -205,5 +211,129 @@
   </data>
   <data name="Error.RequestId" xml:space="preserve">
     <value>Identifiant de la requête : {0}</value>
+  </data>
+  <data name="Prompt.Help" xml:space="preserve">
+    <value>Filtrer — ces commandes sont de vraies navigations
+  ls                   liste les dépôts
+  ls --topic=unity     filtre par sujet
+  ls --lang=rust       filtre par langage
+  ls --demo            ceux qui ont une démo en ligne
+  ls --no-archived     masque les dépôts archivés
+  find &lt;terme&gt;         recherche dans les noms et les descriptions
+
+Circuler
+  open &lt;dépôt&gt;         ouvre la fiche d'un dépôt
+  cd about             va sur la page À propos
+  cd /                 retour à l'accueil
+
+S'informer
+  whoami               à qui appartiennent ces dépôts
+  stats                dépôts, langages, étoiles
+  topics               les sujets et leur fréquence
+  langs                les langages et leur fréquence
+  cache                d'où viennent les données
+
+Confort
+  clear                efface l'écran (Ctrl+L)
+  history              les commandes déjà tapées
+  ↑ ↓                  rappelle une commande
+  Tab                  complète une commande, un sujet, un dépôt
+
+Il y a aussi quelques commandes qui ne servent à rien : « eggs » les liste.</value>
+  </data>
+  <data name="Prompt.WhoAmI" xml:space="preserve">
+    <value>drangoht — github.com/drangoht
+
+Ce site liste les dépôts publics du compte. Il est écrit en .NET, rendu côté
+serveur, bilingue, et déployé en conteneur. Son propre dépôt est dans la liste.</value>
+  </data>
+  <data name="Prompt.Cache" xml:space="preserve">
+    <value>Le catalogue vient de l'API GitHub, puis d'un cache tant qu'il est valide.
+Une copie sur disque prend le relais quand l'API ne répond plus : le site
+continue alors de servir la dernière liste connue plutôt qu'une page vide.
+
+Aucun jeton n'est nécessaire. Sans lui, GitHub accorde soixante requêtes par
+heure — bien au-delà de ce que le cache consomme.</value>
+  </data>
+  <data name="Prompt.Eggs.Sudo" xml:space="preserve">
+    <value>tentez le pire</value>
+  </data>
+  <data name="Prompt.Eggs.Matrix" xml:space="preserve">
+    <value>la pluie de glyphes</value>
+  </data>
+  <data name="Prompt.Eggs.Coffee" xml:space="preserve">
+    <value>la seule erreur HTTP qui se boit</value>
+  </data>
+  <data name="Prompt.Eggs.Vim" xml:space="preserve">
+    <value>y entrer est la partie facile</value>
+  </data>
+  <data name="Prompt.Eggs.Exit" xml:space="preserve">
+    <value>il n'y a pas de sortie</value>
+  </data>
+  <data name="Prompt.Sudo" xml:space="preserve">
+    <value>suppression de /fr/repos …
+suppression de /fr/about …
+suppression de wwwroot/app.css …
+
+… non. C'est un site statique : il repousse au prochain build.</value>
+  </data>
+  <data name="Prompt.Matrix" xml:space="preserve">
+    <value>Réveille-toi, Neo. Tu as des dépôts à maintenir.</value>
+  </data>
+  <data name="Prompt.Coffee" xml:space="preserve">
+    <value>      ( (
+       ) )
+    ..........
+    |        |]
+    \        /
+     `------'
+
+HTTP 418 — I'm a teapot.</value>
+  </data>
+  <data name="Prompt.Vim" xml:space="preserve">
+    <value>Vim ouvert. Pour quitter : redémarrez votre vie.
+(ou tapez « clear », c'est plus rapide)</value>
+  </data>
+  <data name="Prompt.Exit" xml:space="preserve">
+    <value>Cette console n'a pas de sortie. Le site, si : fermez l'onglet.</value>
+  </data>
+  <data name="Prompt.Stats.Repositories" xml:space="preserve">
+    <value>dépôts publics</value>
+  </data>
+  <data name="Prompt.Stats.Languages" xml:space="preserve">
+    <value>langages</value>
+  </data>
+  <data name="Prompt.Stats.Stars" xml:space="preserve">
+    <value>étoiles cumulées</value>
+  </data>
+  <data name="Prompt.Stats.Demos" xml:space="preserve">
+    <value>avec une démo en ligne</value>
+  </data>
+  <data name="Prompt.Stats.Archived" xml:space="preserve">
+    <value>archivés</value>
+  </data>
+  <data name="Prompt.Boot" xml:space="preserve">
+    <value>tapez « help » pour la liste des commandes, ou cliquez un exemple sous la fenêtre.</value>
+  </data>
+  <data name="Prompt.Hints" xml:space="preserve">
+    <value>help liste tout · Tab complète · ↑ ↓ historique · Ctrl+L efface</value>
+  </data>
+  <data name="Prompt.Examples" xml:space="preserve">
+    <value>Exemples de commandes</value>
+  </data>
+  <data name="Listing.Name" xml:space="preserve">
+    <value>dépôt</value>
+  </data>
+  <data name="Listing.Pushed" xml:space="preserve">
+    <value>poussé</value>
+  </data>
+  <data name="Home.More" xml:space="preserve">
+    <value>… et {0} autres</value>
+  </data>
+  <data name="Home.ShowAll" xml:space="preserve">
+    <value>tout afficher</value>
+  </data>
+  <data name="Home.RepoCountOf" xml:space="preserve">
+    <value>{0} dépôts sur {1}</value>
   </data>
 </root>

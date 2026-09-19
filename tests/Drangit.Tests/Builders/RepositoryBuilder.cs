@@ -138,7 +138,6 @@ internal sealed class RepositoryBuilder
         CreatedAt = _createdAt,
         License = _license,
         HomepageUrl = _homepageUrl,
-        PreviewImageUrl = new Uri($"https://opengraph.githubassets.com/1/drangoht/{_name}"),
         IsArchived = _isArchived,
         IsFork = _isFork,
         IsFeatured = _isFeatured,

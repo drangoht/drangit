@@ -21,12 +21,6 @@ internal sealed partial class GitHubClient : IGitHubClient
     private const int PageSize = 100;
 
     /// <summary>
-    /// GitHub produit pour chaque dépôt une image de partage. Le premier segment n'est
-    /// qu'un cache-buster : sa valeur n'a pas de sens, seule sa présence compte.
-    /// </summary>
-    private const string PreviewImageBaseUrl = "https://opengraph.githubassets.com/1/";
-
-    /// <summary>
     /// GitHub renvoie cet identifiant quand il reconnaît un fichier de licence sans pouvoir
     /// l'attribuer. L'afficher tel quel ne dirait rien au visiteur.
     /// </summary>
@@ -206,7 +200,6 @@ internal sealed partial class GitHubClient : IGitHubClient
             CreatedAt = dto.CreatedAt,
             License = ToLicense(dto.License),
             HomepageUrl = ToWebUri(dto.Homepage),
-            PreviewImageUrl = new Uri(PreviewImageBaseUrl + fullName, UriKind.Absolute),
             IsArchived = dto.Archived,
             IsFork = dto.Fork,
         };

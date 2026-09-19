@@ -40,6 +40,50 @@ public sealed record RepositoryFilter
         || WithDemo
         || HideArchived;
 
+    /// <summary>
+    /// Écrit les critères posés comme la ligne de commande qui les produirait.
+    /// </summary>
+    /// <remarks>
+    /// L'accueil l'affiche au-dessus de la barre de filtres : cliquer un critère et taper la
+    /// commande mènent au même endroit, et la ligne le montre. L'ordre suit celui de la barre,
+    /// le terme recherché venant en dernier — c'est le seul argument qui n'est pas un drapeau.
+    /// </remarks>
+    public string ToCommandLine()
+    {
+        var flags = new List<string>(5);
+
+        if (!string.IsNullOrWhiteSpace(Topic))
+        {
+            flags.Add($"--topic={Topic}");
+        }
+
+        if (!string.IsNullOrWhiteSpace(Language))
+        {
+            flags.Add($"--lang={Language}");
+        }
+
+        if (WithDemo)
+        {
+            flags.Add("--demo");
+        }
+
+        if (HideArchived)
+        {
+            flags.Add("--no-archived");
+        }
+
+        if (!string.IsNullOrWhiteSpace(SearchTerm))
+        {
+            flags.Add(Quote(SearchTerm));
+        }
+
+        return flags.Count > 0 ? string.Join(' ', flags) : "--list";
+    }
+
+    /// <summary>Met un terme entre guillemets s'il ne tiendrait pas en un seul mot.</summary>
+    private static string Quote(string term) =>
+        term.Any(char.IsWhiteSpace) ? $"\"{term}\"" : term;
+
     /// <summary>Applique les critères en conservant l'ordre du catalogue.</summary>
     public IReadOnlyList<Repository> Apply(IEnumerable<Repository> repositories)
     {

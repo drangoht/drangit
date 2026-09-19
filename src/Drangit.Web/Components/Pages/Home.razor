@@ -3,6 +3,7 @@
 @inject IRepositoryCatalog Catalog
 @inject IStringLocalizer<SharedResources> T
 @inject IOptions<SiteOptions> Site
+@inject NavigationManager Navigation
 
 <PageTitle>@Site.Value.Name</PageTitle>
 @* Pas d'ImageUrl : l'accueil représente le site, pas le dépôt qui passe en vitrine.
@@ -11,149 +12,236 @@
          Title="@Site.Value.Name"
          Description="@T["Home.Intro"]" />
 
-<h1 class="page-title">@T["Home.Title"]</h1>
-<p class="page-intro">@T["Home.Intro"]</p>
+@* Toute la page tient dans un seul cadre : barre de titre, écran, prompt. Il n'y a plus de
+   barre de critères ni de vitrine au-dessus de la liste — tout passe par le prompt
+   (ADR 0010). *@
+<div class="window">
+    <div class="window__bar">
+        <span class="window__dots" aria-hidden="true"></span>
+        <span class="window__name">@Site.Value.Name.ToLowerInvariant() — bash</span>
+        <span class="window__meta">@_allRepositories.Count @T["Prompt.Stats.Repositories"]</span>
+        @* Le bandeau du site ayant disparu, la barre de titre porte le changement de langue :
+           les adresses sont par langue (ADR 0006) et il faut pouvoir passer de l'une à
+           l'autre autrement qu'en éditant l'URL. *@
+        <CultureSelector />
+    </div>
 
-@if (_allRepositories.Count == 0)
-{
-    <p class="notice notice--warning" role="status">@T["Home.Unavailable"]</p>
-}
-else
-{
-    @* La vitrine ne s'affiche pas sous filtre : elle doublonnerait les résultats. *@
-    @if (Hero is { } hero)
-    {
-        <article class="hero">
-            <RepositoryCover Repository="hero" Class="cover--fill" Eager="true" UsePreviewCard="false" />
-            <div class="hero__body">
-                <p class="hero__eyebrow">@T["Home.Featured"]</p>
-                <h2 class="hero__title">@hero.Name</h2>
-                @if (hero.Description.For(CultureInfo.CurrentUICulture) is { } description)
+    <div class="window__screen">
+        @* Tout ce que le serveur a déjà écrit à l'écran, d'un seul tenant : « clear » doit
+           pouvoir l'effacer comme il efface les sorties suivantes, sans quoi la commande
+           laisserait la liste derrière elle. *@
+        <div class="cli__initial">
+            <div class="cli__intro">
+            @* La bannière tient lieu de titre d'affichage : la peau n'a pas de fonte d'affichage,
+               c'est le dessin en caractères qui en fait office. Elle est décorative pour qui
+               écoute la page — le titre de niveau 1 juste en dessous porte le texte. *@
+            <pre class="cli__banner" role="img" aria-label="@Site.Value.Name">@Banner</pre>
+
+            @* Le titre et l'intro restent, en ligne de commentaire : une page sans <h1> n'est
+               pas indexable, et le visiteur a droit à une phrase qui dit où il est. *@
+            <h1 class="cli__note">// @T["Home.Title"] — @_allRepositories.Count @T["Prompt.Stats.Repositories"], @_availableLanguages.Count @T["Prompt.Stats.Languages"]</h1>
+            <p class="cli__note">// @T["Home.Intro"]</p>
+            <p class="cli__boot">@T["Prompt.Boot"]</p>
+            </div>
+
+
+            @if (_allRepositories.Count == 0)
+            {
+                <p class="notice notice--warning" role="status">@T["Home.Unavailable"]</p>
+            }
+            else
+            {
+                @* La sortie de la commande en cours : c'est ce bloc, et lui seul, que le
+                   prompt rapporte et empile quand on lui demande autre chose. *@
+                <div class="cli__screenful">
+                <p class="cli__line" aria-hidden="true">
+                    <span class="cli__prompt">@Prompt</span> repos @_filter.ToCommandLine()
+                </p>
+
+                <p class="results-count" role="status">
+                    @(Listed.Count == _visibleRepositories.Count
+                        ? _visibleRepositories.Count == 1
+                            ? T["Home.RepoCountOne"].Value
+                            : string.Format(CultureInfo.CurrentCulture, T["Home.RepoCount"].Value, _visibleRepositories.Count)
+                        : string.Format(CultureInfo.CurrentCulture, T["Home.RepoCountOf"].Value, Listed.Count, _visibleRepositories.Count))
+                </p>
+
+                @if (_visibleRepositories.Count == 0)
                 {
-                    <p class="hero__tagline">@description</p>
+                    <p class="notice">@T["Home.EmptyFiltered"]</p>
                 }
-                <div class="hero__actions">
-                    @if (hero.HomepageUrl is { } demo)
+                else
+                {
+                    @* Les en-têtes de colonnes, comme les écrirait un « ls -l ». Décoratifs pour
+                       qui écoute la page : chaque ligne porte déjà ses valeurs en toutes lettres. *@
+                    <p class="listing__head" aria-hidden="true">
+                        <span>@T["Repo.Language"]</span>
+                        <span>@T["Listing.Pushed"]</span>
+                        <span>@T["Repo.Stars"]</span>
+                        <span>@T["Listing.Name"]</span>
+                    </p>
+
+                    <ul class="listing">
+                        @foreach (var repository in Listed)
+                        {
+                            <RepositoryRow Repository="repository" />
+                        }
+                    </ul>
+
+                    @if (Listed.Count < _visibleRepositories.Count)
                     {
-                        <a class="button button--primary" href="@demo" rel="noopener noreferrer external" target="_blank">
-                            @T["Repo.Demo"]
-                        </a>
+                        @* La suite est à un lien, qui fonctionne sans JavaScript et reste une
+                           adresse partageable — pas à un bouton qui déplierait la liste. *@
+                        <p class="cli__more">
+                            @string.Format(CultureInfo.CurrentCulture, T["Home.More"].Value, _visibleRepositories.Count - Listed.Count)
+                            <a href="@AllHref">@T["Home.ShowAll"]</a>
+                        </p>
                     }
-                    <a class="button button--ghost" href="repos/@hero.Slug.Value">@T["Home.SeeRepository"]</a>
+                }
+
+                @* Les sorties que le prompt sait afficher sans recharger la page. Elles sont
+                   rendues ici, traduites et déjà chiffrées : le script client ne connaît ni texte
+                   ni règle, il ne fait que recopier le bloc demandé (ADR 0008). Ajouter une
+                   commande, c'est ajouter un bloc — le script n'a pas à le savoir. Sans
+                   JavaScript, rien de tout ceci ne s'affiche, et rien n'est perdu : ce sont des
+                   commodités, pas des fonctions du site. *@
+                <div class="cli__outputs" hidden="@(_output is null)">
+                    <div data-output="help" hidden="@Hidden("help")">
+                        <pre>@T["Prompt.Help"]</pre>
+                    </div>
+
+                    <div data-output="whoami" hidden="@Hidden("whoami")">
+                        <pre>@T["Prompt.WhoAmI"]</pre>
+                    </div>
+
+                    <div data-output="stats" hidden="@Hidden("stats")">
+                        <ul class="cli__stats">
+                            <li>@T["Prompt.Stats.Repositories"] <span data-stat="repositories">@_allRepositories.Count</span></li>
+                            <li>@T["Prompt.Stats.Languages"] <span data-stat="languages">@_availableLanguages.Count</span></li>
+                            <li>@T["Prompt.Stats.Stars"] <span data-stat="stars">@_allRepositories.Sum(repository => repository.Stars)</span></li>
+                            <li>@T["Prompt.Stats.Demos"] <span data-stat="demos">@_demoCount</span></li>
+                            <li>@T["Prompt.Stats.Archived"] <span data-stat="archived">@_archivedCount</span></li>
+                        </ul>
+                    </div>
+
+                    @* Les sujets et les langages ne sont plus cliquables au-dessus de la liste :
+                       ces deux sorties sont devenues le seul endroit où on les découvre. *@
+                    <div data-output="topics" hidden="@Hidden("topics")">
+                        <ul class="cli__stats">
+                            @foreach (var topic in _availableTopics)
+                            {
+                                <li>@topic.Value <span>@topic.Count</span></li>
+                            }
+                        </ul>
+                    </div>
+
+                    <div data-output="langs" hidden="@Hidden("langs")">
+                        <ul class="cli__stats">
+                            @foreach (var language in _availableLanguages)
+                            {
+                                <li>@language.Value <span>@language.Count</span></li>
+                            }
+                        </ul>
+                    </div>
+
+                    <div data-output="cache" hidden="@Hidden("cache")">
+                        <pre>@T["Prompt.Cache"]</pre>
+                    </div>
+
+                    @* Ce qui suit ne sert à rien, et c'est voulu. *@
+                    <div data-output="eggs" hidden="@Hidden("eggs")">
+                        <ul class="cli__eggs">
+                            <li data-egg="sudo">sudo rm -rf / <span>@T["Prompt.Eggs.Sudo"]</span></li>
+                            <li data-egg="matrix">matrix <span>@T["Prompt.Eggs.Matrix"]</span></li>
+                            <li data-egg="coffee">coffee <span>@T["Prompt.Eggs.Coffee"]</span></li>
+                            <li data-egg="vim">vim <span>@T["Prompt.Eggs.Vim"]</span></li>
+                            <li data-egg="exit">exit <span>@T["Prompt.Eggs.Exit"]</span></li>
+                        </ul>
+                    </div>
+
+                    <div data-output="sudo" hidden="@Hidden("sudo")"><pre>@T["Prompt.Sudo"]</pre></div>
+                    <div data-output="matrix" data-effect="rain" hidden="@Hidden("matrix")"><pre>@T["Prompt.Matrix"]</pre></div>
+                    <div data-output="coffee" hidden="@Hidden("coffee")"><pre>@T["Prompt.Coffee"]</pre></div>
+                    <div data-output="vim" hidden="@Hidden("vim")"><pre>@T["Prompt.Vim"]</pre></div>
+                    <div data-output="exit" hidden="@Hidden("exit")"><pre>@T["Prompt.Exit"]</pre></div>
                 </div>
             </div>
-        </article>
-    }
-
-    @* Les critères sont des liens : une sélection produit une URL partageable et le tri
-       fonctionne sans JavaScript — condition d'un rendu serveur statique. *@
-    <section class="filters" aria-label="@T["Filter.Legend"]">
-        <ul class="chips">
-            <li>
-                <a class="chip @(_filter.IsActive ? null : "chip--on")" href=".">@T["Filter.All"]</a>
-            </li>
-            @* Une bascule qui ne partage pas le catalogue en deux ne sert à rien : elle
-               renverrait soit la liste entière, soit rien. On ne la propose donc que
-               lorsqu'elle a un effet. *@
-            @if (_demoCount > 0 && _demoCount < _allRepositories.Count)
-            {
-                <li>
-                    <a class="chip @(WithDemoOnly ? "chip--on" : null)" href="@HrefTogglingDemo()">
-                        @T["Filter.WithDemo"] <span class="chip__count">@_demoCount</span>
-                    </a>
-                </li>
             }
-            @if (_archivedCount > 0 && _archivedCount < _allRepositories.Count)
-            {
-                <li>
-                    <a class="chip @(ArchivedHidden ? "chip--on" : null)" href="@HrefTogglingArchived()">
-                        @T["Filter.HideArchived"] <span class="chip__count">@_archivedCount</span>
-                    </a>
-                </li>
-            }
-            @foreach (var topic in ListedTopics)
-            {
-                <li>
-                    <a class="chip @(IsSelected(Topic, topic.Value) ? "chip--on" : null)"
-                       href="@HrefWithTopic(IsSelected(Topic, topic.Value) ? null : topic.Value)">
-                        @topic.Value <span class="chip__count">@topic.Count</span>
-                    </a>
-                </li>
-            }
-        </ul>
+        </div>
+    </div>
 
-        @* Recherche et langage demandent une saisie ou une liste : ils restent un formulaire
-           GET. Les critères déjà posés voyagent en champs cachés pour ne pas être perdus. *@
-        <form method="get" class="filters__form" role="search">
-            <input type="hidden" name="topic" value="@Topic" />
-            @if (WithDemoOnly)
-            {
-                <input type="hidden" name="demo" value="true" />
-            }
-            @if (ArchivedHidden)
-            {
-                <input type="hidden" name="active" value="true" />
-            }
+    @* Le prompt est un vrai formulaire GET : il fonctionne sans JavaScript, et une commande
+       y mène à la même adresse qu'un clic y aurait menée (ADR 0008). C'est désormais le seul
+       chemin vers un filtre, d'où la mention des commandes utiles dans son invite. *@
+    <form method="get" class="cli__form" role="search">
+        <label class="cli__prompt" for="c">@Prompt</label>
+        <input type="text" id="c" name="c" autocomplete="off" spellcheck="false"
+               placeholder="@T["Prompt.Placeholder"]" aria-label="@T["Prompt.Label"]" />
+        <button type="submit" class="visually-hidden">@T["Filter.Apply"]</button>
+    </form>
+</div>
 
-            <div class="filters__field filters__field--grow">
-                <label for="q">@T["Filter.Search"]</label>
-                <input type="search" id="q" name="q" value="@Search"
-                       placeholder="@T["Filter.SearchPlaceholder"]" autocomplete="off" />
-            </div>
+@* Les raccourcis n'existent que si le script est là : il retire lui-même l'attribut. Les
+   annoncer sans lui serait mentir. *@
+<p class="cli__hints" hidden>@T["Prompt.Hints"]</p>
 
-            <div class="filters__field">
-                <label for="lang">@T["Filter.Language"]</label>
-                <select id="lang" name="lang">
-                    <option value="">@T["Filter.Any"]</option>
-                    @foreach (var language in _availableLanguages)
-                    {
-                        <option value="@language.Value" selected="@IsSelected(Language, language.Value)">
-                            @language.Value (@language.Count)
-                        </option>
-                    }
-                </select>
-            </div>
-
-            <div class="filters__actions">
-                <button type="submit" class="button button--primary">@T["Filter.Apply"]</button>
-            </div>
-        </form>
-    </section>
-
-    <p class="results-count" role="status">
-        @(_visibleRepositories.Count == 1
-            ? T["Home.RepoCountOne"].Value
-            : string.Format(CultureInfo.CurrentCulture, T["Home.RepoCount"].Value, _visibleRepositories.Count))
-    </p>
-
-    @if (_visibleRepositories.Count == 0)
+@* Des liens, et non des boutons : ils mènent à la commande par la même adresse que la
+   saisie, donc sans JavaScript. C'est aussi ce qui remplace la découverte qu'offrait la
+   barre de critères (ADR 0010). *@
+<nav class="cli__examples" aria-label="@T["Prompt.Examples"]">
+    @foreach (var example in Examples)
     {
-        <p class="notice">@T["Home.EmptyFiltered"]</p>
+        <a class="cli__example" href="@QueryHelpers.AddQueryString(".", "c", example)">@example</a>
     }
-    else
-    {
-        <ul class="grid">
-            @foreach (var repository in Listed)
-            {
-                <li class="grid__item">
-                    <RepositoryCard Repository="repository" />
-                </li>
-            }
-        </ul>
-    }
-}
+</nav>
 
 @code {
     /// <summary>
-    /// Nombre de sujets proposés en filtre.
+    /// Le nom du site dessiné en caractères, tel qu'un programme l'écrirait au démarrage.
     /// </summary>
     /// <remarks>
-    /// Un compte GitHub actif cumule vite cinquante sujets distincts : les afficher tous
-    /// ferait une barre de filtres plus haute que la grille qu'elle filtre. Les sujets sont
-    /// triés par fréquence, donc cette coupe garde ceux qui décrivent le compte. Un sujet
-    /// hors liste reste atteignable : la fiche d'un dépôt le propose en lien.
+    /// Écrit ici et non dans le balisage : dans un <c>&lt;pre&gt;</c>, l'indentation du
+    /// fichier source ferait partie du rendu, et le dessin serait décalé de la marge du
+    /// composant.
     /// </remarks>
-    private const int MaxListedTopics = 12;
+    private const string Banner = """
+ ██████╗ ██████╗  █████╗ ███╗   ██╗ ██████╗ ██╗████████╗
+ ██╔══██╗██╔══██╗██╔══██╗████╗  ██║██╔════╝ ██║╚══██╔══╝
+ ██║  ██║██████╔╝███████║██╔██╗ ██║██║  ███╗██║   ██║
+ ██║  ██║██╔══██╗██╔══██║██║╚██╗██║██║   ██║██║   ██║
+ ██████╔╝██║  ██║██║  ██║██║ ╚████║╚██████╔╝██║   ██║
+ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝   ╚═╝
+""";
+
+    /// <summary>Invite de commande décorative, répétée avant chaque section.</summary>
+    private const string Prompt = "drangoht@~/repos $";
+
+    /// <summary>
+    /// Commandes dont la page contient déjà la réponse, et qui n'ont donc rien à demander au
+    /// catalogue.
+    /// </summary>
+    /// <remarks>
+    /// Le script client les traite sans recharger la page (ADR 0008). Elles sont répétées ici
+    /// pour que le serveur sache les rendre aussi : les critères cliquables ayant disparu
+    /// (ADR 0010), « topics » et « langs » sont devenus le seul endroit où l'on découvre les
+    /// sujets et les langages — les laisser au JavaScript seul retirerait cette découverte à
+    /// qui n'en a pas. Les blocs, eux, ne sont écrits qu'une fois, dans le balisage.
+    /// </remarks>
+    private static readonly string[] KnownOutputs =
+        ["help", "whoami", "stats", "topics", "langs", "cache", "eggs", "sudo", "matrix", "coffee", "vim", "exit"];
+
+    /// <summary>
+    /// Commandes proposées sous la fenêtre, pour ne pas laisser le visiteur devant un prompt
+    /// vide. Elles couvrent les trois familles : filtrer, s'informer, et perdre son temps.
+    /// </summary>
+    private static readonly string[] Examples =
+        ["help", "ls --demo", "ls --topic=unity", "find huffman", "stats", "topics", "whoami", "eggs"];
+
+    /// <summary>Sortie demandée au prompt, quand la commande en désigne une.</summary>
+    private string? _output;
+
+    /// <summary>Masque un bloc de sortie tant que ce n'est pas lui qu'on demande.</summary>
+    private bool Hidden(string output) => !string.Equals(_output, output, StringComparison.Ordinal);
 
     private IReadOnlyList<Repository> _allRepositories = [];
     private IReadOnlyList<Repository> _visibleRepositories = [];
@@ -182,42 +270,39 @@ else
     [SupplyParameterFromQuery(Name = "active")]
     private string? Active { get; set; }
 
+    /// <summary>Ligne saisie au prompt, à interpréter puis à effacer de l'adresse.</summary>
+    [SupplyParameterFromQuery(Name = "c")]
+    private string? Command { get; set; }
+
+    /// <summary>Écrit la liste en entier plutôt que son début.</summary>
+    [SupplyParameterFromQuery(Name = "all")]
+    private string? All { get; set; }
+
+    private bool ShowAll => bool.TryParse(All, out var all) && all;
+
     private bool WithDemoOnly => bool.TryParse(Demo, out var demo) && demo;
 
     private bool ArchivedHidden => bool.TryParse(Active, out var active) && active;
 
-    /// <summary>Dépôt de la vitrine, absent dès qu'un critère est posé.</summary>
-    private Repository? Hero => _filter.IsActive ? null : FeaturedRepository.Of(_allRepositories);
-
     /// <summary>
-    /// Sujets proposés en filtre : les plus fréquents, plus celui qui est sélectionné.
+    /// Dépôts listés, celui qui tenait la vitrine en tête.
     /// </summary>
     /// <remarks>
-    /// Sans ce rattrapage, un sujet rare atteint depuis une fiche s'appliquerait sans
-    /// apparaître dans la barre — impossible de le désélectionner autrement qu'en revenant
-    /// à « Tout », ce qui effacerait aussi la recherche.
+    /// La vitrine a disparu (ADR 0010), pas la désignation : le dépôt que le fichier éditorial
+    /// met en avant ouvre la liste. Sous filtre, l'ordre du catalogue prime — un dépôt hors
+    /// critère s'inviterait en tête des résultats.
     /// </remarks>
-    private IEnumerable<RepositoryFacet> ListedTopics
-    {
-        get
-        {
-            var listed = _availableTopics.Take(MaxListedTopics).ToList();
+    private IReadOnlyList<Repository> Listed =>
+        RepositoryListing.FirstPageOf(Ordered, ShowAll ? 0 : RepositoryListing.DefaultPageSize);
 
-            if (Topic is not { Length: > 0 } selected
-                || listed.Any(facet => IsSelected(selected, facet.Value)))
-            {
-                return listed;
-            }
+    /// <summary>Dépôts visibles, celui que le fichier éditorial désigne en tête.</summary>
+    private IReadOnlyList<Repository> Ordered =>
+        !_filter.IsActive && FeaturedRepository.Of(_visibleRepositories) is { } featured
+            ? [featured, .. _visibleRepositories.Where(repository => repository != featured)]
+            : _visibleRepositories;
 
-            return _availableTopics.FirstOrDefault(facet => IsSelected(selected, facet.Value)) is { } rare
-                ? listed.Append(rare)
-                : listed;
-        }
-    }
-
-    /// <summary>Dépôts de la grille : le dépôt en vitrine n'y est pas répété.</summary>
-    private IEnumerable<Repository> Listed =>
-        Hero is { } hero ? _visibleRepositories.Where(repository => repository != hero) : _visibleRepositories;
+    /// <summary>Adresse de la même liste, écrite en entier.</summary>
+    private string AllHref => QueryHelpers.AddQueryString(PathOf(_filter), "all", "true");
 
     protected override async Task OnParametersSetAsync()
     {
@@ -226,6 +311,24 @@ else
         _availableLanguages = RepositoryFilter.AvailableLanguagesOf(_allRepositories);
         _demoCount = RepositoryFilter.CountWithDemo(_allRepositories);
         _archivedCount = RepositoryFilter.CountArchived(_allRepositories);
+
+        // Une commande saisie ne reste jamais dans l'adresse : elle est traduite en la même
+        // adresse qu'aurait produite un clic, puis on y redirige. Sans quoi « ?c=… » et
+        // « ?topic=… » seraient deux adresses pour la même page, partagées au hasard.
+        if (Command is not null)
+        {
+            // Une commande dont la réponse est déjà dans la page s'affiche sur place : elle
+            // ne mène nulle part, et rediriger vers une adresse inventée pour elle ferait
+            // d'une commodité une page à indexer.
+            _output = KnownOutputs.FirstOrDefault(
+                output => string.Equals(output, Command.Trim().ToLowerInvariant(), StringComparison.Ordinal));
+
+            if (_output is null)
+            {
+                Navigation.NavigateTo(PathOf(RepositoryCommand.Parse(Command, _allRepositories)));
+                return;
+            }
+        }
 
         _filter = new RepositoryFilter
         {
@@ -239,30 +342,30 @@ else
         _visibleRepositories = _filter.Apply(_allRepositories);
     }
 
-    private string HrefWithTopic(string? topic) => Href(topic, WithDemoOnly, ArchivedHidden);
+    /// <summary>Adresse relative où mène une commande, préfixe de langue compris par la base.</summary>
+    private static string PathOf(RepositoryCommand command) => command switch
+    {
+        RepositoryCommand.Open open => "repos/" + open.Slug.Value,
+        RepositoryCommand.GoToPage { Page: SitePage.About } => "about",
+        RepositoryCommand.Filter filter => PathOf(filter.Value),
+        _ => ".",
+    };
 
-    private string HrefTogglingDemo() => Href(Topic, !WithDemoOnly, ArchivedHidden);
-
-    private string HrefTogglingArchived() => Href(Topic, WithDemoOnly, !ArchivedHidden);
-
-    /// <summary>
-    /// Compose l'URL de la page en remplaçant un seul critère : cliquer sur un sujet ne doit
-    /// pas effacer la recherche ni le langage déjà choisis.
-    /// </summary>
-    private string Href(string? topic, bool demo, bool hideArchived)
+    /// <summary>Adresse d'une liste filtrée : celle-là même que produisent les liens de la barre.</summary>
+    private static string PathOf(RepositoryFilter filter)
     {
         var query = new Dictionary<string, string?>(StringComparer.Ordinal);
 
-        AddIfSet(query, "q", Search);
-        AddIfSet(query, "topic", topic);
-        AddIfSet(query, "lang", Language);
+        AddIfSet(query, "q", filter.SearchTerm);
+        AddIfSet(query, "topic", filter.Topic);
+        AddIfSet(query, "lang", filter.Language);
 
-        if (demo)
+        if (filter.WithDemo)
         {
             query["demo"] = "true";
         }
 
-        if (hideArchived)
+        if (filter.HideArchived)
         {
             query["active"] = "true";
         }
@@ -277,7 +380,4 @@ else
             query[name] = value;
         }
     }
-
-    private static bool IsSelected(string? current, string candidate) =>
-        string.Equals(current, candidate, StringComparison.OrdinalIgnoreCase);
 }

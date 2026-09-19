@@ -176,16 +176,14 @@ public sealed class GitHubClientTests
     }
 
     [Fact]
-    public async Task GetPublicRepositoriesAsync_ProposeLaCarteDeGitHubPourIllustrerChaqueDepot()
+    public async Task GetPublicRepositoriesAsync_NeProposeAucuneImagePourUnDepotSansCapture()
     {
         var client = CreateClient(StubHttpMessageHandler.ReturningJson(ReponseGitHub));
 
         var depot = (await client.GetPublicRepositoriesAsync(CancellationToken.None)).ShouldHaveSingleItem();
 
-        // Elle illustre les pages du site, où elle est recadrée. Elle ne sort jamais du
-        // site : hors de lui, l'avatar qu'elle incruste ne serait plus recadré.
-        depot.PreviewImageUrl!.ToString()
-            .ShouldBe("https://opengraph.githubassets.com/1/drangoht/Algorithme-de-Huffman");
+        // Les seules images du site viennent du fichier éditorial (ADR 0009) : GitHub n'en
+        // fournit aucune que le site accepte d'afficher.
         depot.ShowcaseImageUrl.ShouldBeNull();
     }
 

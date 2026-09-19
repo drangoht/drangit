@@ -66,11 +66,72 @@ public static class RepositoryVisual
             ["Vue"] = "#41b883",
         };
 
+    /// <summary>
+    /// Luminance relative en deçà de laquelle une teinte ne se lit plus sur la vignette.
+    /// </summary>
+    /// <remarks>
+    /// Seuil constaté à l'œil sur les langages du compte, pas une valeur normative : au-dessus,
+    /// le vert de C# et le bleu de TypeScript se détachent encore ; en dessous, le bleu nuit de
+    /// PowerShell et celui de Lua se confondent avec le fond.
+    /// </remarks>
+    private const double MinimumInkLuminance = 0.12;
+
     /// <summary>Couleur d'accent d'un langage, ou la teinte neutre s'il est inconnu.</summary>
     public static string AccentOf(string? language) =>
         language is not null && AccentsByLanguage.TryGetValue(language, out var accent)
             ? accent
             : NeutralAccent;
+
+    /// <summary>
+    /// Teinte du langage telle qu'elle s'écrit sur la vignette : la couleur officielle si elle
+    /// s'y lit, sa version éclaircie sinon.
+    /// </summary>
+    /// <remarks>
+    /// Les couleurs de <c>linguist</c> sont faites pour une pastille sur le fond clair de
+    /// GitHub ; la vignette, elle, est sombre, et les plus foncées y disparaissent — le prompt
+    /// et la pastille avec. Un mélange à parts égales avec le blanc suffit dans tous les cas,
+    /// le noir pur compris, et garde la dominante : c'est tout ce qu'on demande à une pastille.
+    /// </remarks>
+    public static string InkOf(string? language)
+    {
+        var accent = AccentOf(language);
+
+        return RelativeLuminanceOf(accent) >= MinimumInkLuminance ? accent : Lighten(accent);
+    }
+
+    /// <summary>Luminance relative d'une couleur écrite <c>#rrggbb</c>, au sens WCAG.</summary>
+    private static double RelativeLuminanceOf(string color)
+    {
+        var (red, green, blue) = ChannelsOf(color);
+
+        return (0.2126 * Linearized(red)) + (0.7152 * Linearized(green)) + (0.0722 * Linearized(blue));
+    }
+
+    /// <summary>Composante sRGB ramenée à l'échelle linéaire de la formule de luminance.</summary>
+    private static double Linearized(int channel)
+    {
+        var ratio = channel / 255d;
+
+        return ratio <= 0.04045 ? ratio / 12.92 : Math.Pow((ratio + 0.055) / 1.055, 2.4);
+    }
+
+    /// <summary>Mélange une couleur à parts égales avec le blanc.</summary>
+    private static string Lighten(string color)
+    {
+        var (red, green, blue) = ChannelsOf(color);
+
+        return string.Create(
+            CultureInfo.InvariantCulture,
+            $"#{(red + 255) / 2:x2}{(green + 255) / 2:x2}{(blue + 255) / 2:x2}");
+    }
+
+    /// <summary>Composantes d'une couleur écrite <c>#rrggbb</c>.</summary>
+    private static (int Red, int Green, int Blue) ChannelsOf(string color) =>
+    (
+        int.Parse(color.AsSpan(1, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture),
+        int.Parse(color.AsSpan(3, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture),
+        int.Parse(color.AsSpan(5, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture)
+    );
 
     /// <summary>
     /// Inclinaison du dégradé, entre 0 et 359 degrés, dérivée du nom.
@@ -107,6 +168,6 @@ public static class RepositoryVisual
 
         return string.Create(
             CultureInfo.InvariantCulture,
-            $"--cover-accent: {AccentOf(repository.Language)}; --cover-angle: {AngleOf(repository.Name)}deg");
+            $"--cover-accent: {AccentOf(repository.Language)}; --cover-ink: {InkOf(repository.Language)}; --cover-angle: {AngleOf(repository.Name)}deg");
     }
 }

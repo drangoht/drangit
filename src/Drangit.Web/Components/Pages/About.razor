@@ -5,6 +5,12 @@
 <PageTitle>@T["About.Title"] — @Site.Value.Name</PageTitle>
 <SeoHead CanonicalPath="/about" Title="@T["About.Title"]" Description="@T["About.Body"]" />
 
+@* Le bandeau du site a disparu (ADR 0010) : ce fil porte le retour et la langue. *@
+<nav class="breadcrumb">
+    <a href=".">← @T["Repo.Breadcrumb"]</a>
+    <CultureSelector />
+</nav>
+
 <h1 class="page-title">@T["About.Title"]</h1>
 
 <div class="prose">
