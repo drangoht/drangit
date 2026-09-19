@@ -105,8 +105,12 @@ docker compose up -d          # lit .env (voir .env.example)
 - **Le contenu éditorial s'applique en sortie du catalogue**, après le cache et après le repli
   sur instantané : une correction prend effet même quand GitHub est injoignable. Ne pas
   l'appliquer avant la mise en cache.
-- Le rendu est **Blazor SSR statique** : pas d'interactivité côté client, les formulaires
-  sont de vrais `<form>` HTML (GET pour les filtres).
+- Le rendu est **Blazor SSR statique** : aucun composant interactif, aucun circuit, les
+  formulaires sont de vrais `<form>` HTML (GET pour les filtres). Seule exception, écrite dans
+  l'ADR 0008 : un script de `wwwroot/` peut **enrichir** ce qui fonctionne déjà sans lui.
+  Le critère n'est pas la quantité de JavaScript, c'est ce qui disparaît quand il est absent —
+  si c'est une fonction du site, le script est au mauvais endroit. Il ne connaît donc aucune
+  règle métier : il présente et il navigue.
 
 ## Réflexes attendus
 
