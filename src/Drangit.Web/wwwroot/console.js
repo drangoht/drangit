@@ -263,8 +263,19 @@
             });
         }
 
+        // Dédupliqué : l'écran empile les sorties (ADR 0011), donc un même dépôt y figure
+        // autant de fois qu'il a été listé. Sans cela, « cd dran » proposerait deux fois
+        // les mêmes noms.
+        var prefix = word.toLowerCase();
+        var seen = Object.create(null);
+
         return pool.filter(function (candidate) {
-            return candidate.toLowerCase().indexOf(word.toLowerCase()) === 0;
+            if (candidate.toLowerCase().indexOf(prefix) !== 0 || seen[candidate]) {
+                return false;
+            }
+
+            seen[candidate] = true;
+            return true;
         });
     }
 
