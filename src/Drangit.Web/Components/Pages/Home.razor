@@ -27,135 +27,140 @@
     </div>
 
     <div class="window__screen">
-        @* La bannière tient lieu de titre d'affichage : la peau n'a pas de fonte d'affichage,
-           c'est le dessin en caractères qui en fait office. Elle est décorative pour qui
-           écoute la page — le titre de niveau 1 juste en dessous porte le texte. *@
-        <pre class="cli__banner" role="img" aria-label="@Site.Value.Name">@Banner</pre>
+        @* Tout ce que le serveur a déjà écrit à l'écran, d'un seul tenant : « clear » doit
+           pouvoir l'effacer comme il efface les sorties suivantes, sans quoi la commande
+           laisserait la liste derrière elle. *@
+        <div class="cli__initial">
+            @* La bannière tient lieu de titre d'affichage : la peau n'a pas de fonte d'affichage,
+               c'est le dessin en caractères qui en fait office. Elle est décorative pour qui
+               écoute la page — le titre de niveau 1 juste en dessous porte le texte. *@
+            <pre class="cli__banner" role="img" aria-label="@Site.Value.Name">@Banner</pre>
 
-        @* Le titre et l'intro restent, en ligne de commentaire : une page sans <h1> n'est
-           pas indexable, et le visiteur a droit à une phrase qui dit où il est. *@
-        <h1 class="cli__note">// @T["Home.Title"] — @_allRepositories.Count @T["Prompt.Stats.Repositories"], @_availableLanguages.Count @T["Prompt.Stats.Languages"]</h1>
-        <p class="cli__note">// @T["Home.Intro"]</p>
-        <p class="cli__boot">@T["Prompt.Boot"]</p>
+            @* Le titre et l'intro restent, en ligne de commentaire : une page sans <h1> n'est
+               pas indexable, et le visiteur a droit à une phrase qui dit où il est. *@
+            <h1 class="cli__note">// @T["Home.Title"] — @_allRepositories.Count @T["Prompt.Stats.Repositories"], @_availableLanguages.Count @T["Prompt.Stats.Languages"]</h1>
+            <p class="cli__note">// @T["Home.Intro"]</p>
+            <p class="cli__boot">@T["Prompt.Boot"]</p>
 
-        @if (_allRepositories.Count == 0)
-        {
-            <p class="notice notice--warning" role="status">@T["Home.Unavailable"]</p>
-        }
-        else
-        {
-            <p class="cli__line" aria-hidden="true">
-                <span class="cli__prompt">@Prompt</span> repos @_filter.ToCommandLine()
-            </p>
-
-            <p class="results-count" role="status">
-                @(Listed.Count == _visibleRepositories.Count
-                    ? _visibleRepositories.Count == 1
-                        ? T["Home.RepoCountOne"].Value
-                        : string.Format(CultureInfo.CurrentCulture, T["Home.RepoCount"].Value, _visibleRepositories.Count)
-                    : string.Format(CultureInfo.CurrentCulture, T["Home.RepoCountOf"].Value, Listed.Count, _visibleRepositories.Count))
-            </p>
-
-            @if (_visibleRepositories.Count == 0)
+            @if (_allRepositories.Count == 0)
             {
-                <p class="notice">@T["Home.EmptyFiltered"]</p>
+                <p class="notice notice--warning" role="status">@T["Home.Unavailable"]</p>
             }
             else
             {
-                @* Les en-têtes de colonnes, comme les écrirait un « ls -l ». Décoratifs pour
-                   qui écoute la page : chaque ligne porte déjà ses valeurs en toutes lettres. *@
-                <p class="listing__head" aria-hidden="true">
-                    <span>@T["Repo.Language"]</span>
-                    <span>@T["Listing.Pushed"]</span>
-                    <span>@T["Repo.Stars"]</span>
-                    <span>@T["Listing.Name"]</span>
+                <p class="cli__line" aria-hidden="true">
+                    <span class="cli__prompt">@Prompt</span> repos @_filter.ToCommandLine()
                 </p>
 
-                <ul class="listing">
-                    @foreach (var repository in Listed)
-                    {
-                        <RepositoryRow Repository="repository" />
-                    }
-                </ul>
+                <p class="results-count" role="status">
+                    @(Listed.Count == _visibleRepositories.Count
+                        ? _visibleRepositories.Count == 1
+                            ? T["Home.RepoCountOne"].Value
+                            : string.Format(CultureInfo.CurrentCulture, T["Home.RepoCount"].Value, _visibleRepositories.Count)
+                        : string.Format(CultureInfo.CurrentCulture, T["Home.RepoCountOf"].Value, Listed.Count, _visibleRepositories.Count))
+                </p>
 
-                @if (Listed.Count < _visibleRepositories.Count)
+                @if (_visibleRepositories.Count == 0)
                 {
-                    @* La suite est à un lien, qui fonctionne sans JavaScript et reste une
-                       adresse partageable — pas à un bouton qui déplierait la liste. *@
-                    <p class="cli__more">
-                        @string.Format(CultureInfo.CurrentCulture, T["Home.More"].Value, _visibleRepositories.Count - Listed.Count)
-                        <a href="@AllHref">@T["Home.ShowAll"]</a>
-                    </p>
+                    <p class="notice">@T["Home.EmptyFiltered"]</p>
                 }
+                else
+                {
+                    @* Les en-têtes de colonnes, comme les écrirait un « ls -l ». Décoratifs pour
+                       qui écoute la page : chaque ligne porte déjà ses valeurs en toutes lettres. *@
+                    <p class="listing__head" aria-hidden="true">
+                        <span>@T["Repo.Language"]</span>
+                        <span>@T["Listing.Pushed"]</span>
+                        <span>@T["Repo.Stars"]</span>
+                        <span>@T["Listing.Name"]</span>
+                    </p>
+
+                    <ul class="listing">
+                        @foreach (var repository in Listed)
+                        {
+                            <RepositoryRow Repository="repository" />
+                        }
+                    </ul>
+
+                    @if (Listed.Count < _visibleRepositories.Count)
+                    {
+                        @* La suite est à un lien, qui fonctionne sans JavaScript et reste une
+                           adresse partageable — pas à un bouton qui déplierait la liste. *@
+                        <p class="cli__more">
+                            @string.Format(CultureInfo.CurrentCulture, T["Home.More"].Value, _visibleRepositories.Count - Listed.Count)
+                            <a href="@AllHref">@T["Home.ShowAll"]</a>
+                        </p>
+                    }
+                }
+
+                @* Les sorties que le prompt sait afficher sans recharger la page. Elles sont
+                   rendues ici, traduites et déjà chiffrées : le script client ne connaît ni texte
+                   ni règle, il ne fait que recopier le bloc demandé (ADR 0008). Ajouter une
+                   commande, c'est ajouter un bloc — le script n'a pas à le savoir. Sans
+                   JavaScript, rien de tout ceci ne s'affiche, et rien n'est perdu : ce sont des
+                   commodités, pas des fonctions du site. *@
+                <div class="cli__outputs" hidden="@(_output is null)">
+                    <div data-output="help" hidden="@Hidden("help")">
+                        <pre>@T["Prompt.Help"]</pre>
+                    </div>
+
+                    <div data-output="whoami" hidden="@Hidden("whoami")">
+                        <pre>@T["Prompt.WhoAmI"]</pre>
+                    </div>
+
+                    <div data-output="stats" hidden="@Hidden("stats")">
+                        <ul class="cli__stats">
+                            <li>@T["Prompt.Stats.Repositories"] <span data-stat="repositories">@_allRepositories.Count</span></li>
+                            <li>@T["Prompt.Stats.Languages"] <span data-stat="languages">@_availableLanguages.Count</span></li>
+                            <li>@T["Prompt.Stats.Stars"] <span data-stat="stars">@_allRepositories.Sum(repository => repository.Stars)</span></li>
+                            <li>@T["Prompt.Stats.Demos"] <span data-stat="demos">@_demoCount</span></li>
+                            <li>@T["Prompt.Stats.Archived"] <span data-stat="archived">@_archivedCount</span></li>
+                        </ul>
+                    </div>
+
+                    @* Les sujets et les langages ne sont plus cliquables au-dessus de la liste :
+                       ces deux sorties sont devenues le seul endroit où on les découvre. *@
+                    <div data-output="topics" hidden="@Hidden("topics")">
+                        <ul class="cli__stats">
+                            @foreach (var topic in _availableTopics)
+                            {
+                                <li>@topic.Value <span>@topic.Count</span></li>
+                            }
+                        </ul>
+                    </div>
+
+                    <div data-output="langs" hidden="@Hidden("langs")">
+                        <ul class="cli__stats">
+                            @foreach (var language in _availableLanguages)
+                            {
+                                <li>@language.Value <span>@language.Count</span></li>
+                            }
+                        </ul>
+                    </div>
+
+                    <div data-output="cache" hidden="@Hidden("cache")">
+                        <pre>@T["Prompt.Cache"]</pre>
+                    </div>
+
+                    @* Ce qui suit ne sert à rien, et c'est voulu. *@
+                    <div data-output="eggs" hidden="@Hidden("eggs")">
+                        <ul class="cli__eggs">
+                            <li data-egg="sudo">sudo rm -rf / <span>@T["Prompt.Eggs.Sudo"]</span></li>
+                            <li data-egg="matrix">matrix <span>@T["Prompt.Eggs.Matrix"]</span></li>
+                            <li data-egg="coffee">coffee <span>@T["Prompt.Eggs.Coffee"]</span></li>
+                            <li data-egg="vim">vim <span>@T["Prompt.Eggs.Vim"]</span></li>
+                            <li data-egg="exit">exit <span>@T["Prompt.Eggs.Exit"]</span></li>
+                        </ul>
+                    </div>
+
+                    <div data-output="sudo" hidden="@Hidden("sudo")"><pre>@T["Prompt.Sudo"]</pre></div>
+                    <div data-output="matrix" data-effect="rain" hidden="@Hidden("matrix")"><pre>@T["Prompt.Matrix"]</pre></div>
+                    <div data-output="coffee" hidden="@Hidden("coffee")"><pre>@T["Prompt.Coffee"]</pre></div>
+                    <div data-output="vim" hidden="@Hidden("vim")"><pre>@T["Prompt.Vim"]</pre></div>
+                    <div data-output="exit" hidden="@Hidden("exit")"><pre>@T["Prompt.Exit"]</pre></div>
+                </div>
             }
-
-            @* Les sorties que le prompt sait afficher sans recharger la page. Elles sont
-               rendues ici, traduites et déjà chiffrées : le script client ne connaît ni texte
-               ni règle, il ne fait que recopier le bloc demandé (ADR 0008). Ajouter une
-               commande, c'est ajouter un bloc — le script n'a pas à le savoir. Sans
-               JavaScript, rien de tout ceci ne s'affiche, et rien n'est perdu : ce sont des
-               commodités, pas des fonctions du site. *@
-            <div class="cli__outputs" hidden="@(_output is null)">
-                <div data-output="help" hidden="@Hidden("help")">
-                    <pre>@T["Prompt.Help"]</pre>
-                </div>
-
-                <div data-output="whoami" hidden="@Hidden("whoami")">
-                    <pre>@T["Prompt.WhoAmI"]</pre>
-                </div>
-
-                <div data-output="stats" hidden="@Hidden("stats")">
-                    <ul class="cli__stats">
-                        <li>@T["Prompt.Stats.Repositories"] <span data-stat="repositories">@_allRepositories.Count</span></li>
-                        <li>@T["Prompt.Stats.Languages"] <span data-stat="languages">@_availableLanguages.Count</span></li>
-                        <li>@T["Prompt.Stats.Stars"] <span data-stat="stars">@_allRepositories.Sum(repository => repository.Stars)</span></li>
-                        <li>@T["Prompt.Stats.Demos"] <span data-stat="demos">@_demoCount</span></li>
-                        <li>@T["Prompt.Stats.Archived"] <span data-stat="archived">@_archivedCount</span></li>
-                    </ul>
-                </div>
-
-                @* Les sujets et les langages ne sont plus cliquables au-dessus de la liste :
-                   ces deux sorties sont devenues le seul endroit où on les découvre. *@
-                <div data-output="topics" hidden="@Hidden("topics")">
-                    <ul class="cli__stats">
-                        @foreach (var topic in _availableTopics)
-                        {
-                            <li>@topic.Value <span>@topic.Count</span></li>
-                        }
-                    </ul>
-                </div>
-
-                <div data-output="langs" hidden="@Hidden("langs")">
-                    <ul class="cli__stats">
-                        @foreach (var language in _availableLanguages)
-                        {
-                            <li>@language.Value <span>@language.Count</span></li>
-                        }
-                    </ul>
-                </div>
-
-                <div data-output="cache" hidden="@Hidden("cache")">
-                    <pre>@T["Prompt.Cache"]</pre>
-                </div>
-
-                @* Ce qui suit ne sert à rien, et c'est voulu. *@
-                <div data-output="eggs" hidden="@Hidden("eggs")">
-                    <ul class="cli__eggs">
-                        <li data-egg="sudo">sudo rm -rf / <span>@T["Prompt.Eggs.Sudo"]</span></li>
-                        <li data-egg="matrix">matrix <span>@T["Prompt.Eggs.Matrix"]</span></li>
-                        <li data-egg="coffee">coffee <span>@T["Prompt.Eggs.Coffee"]</span></li>
-                        <li data-egg="vim">vim <span>@T["Prompt.Eggs.Vim"]</span></li>
-                        <li data-egg="exit">exit <span>@T["Prompt.Eggs.Exit"]</span></li>
-                    </ul>
-                </div>
-
-                <div data-output="sudo" hidden="@Hidden("sudo")"><pre>@T["Prompt.Sudo"]</pre></div>
-                <div data-output="matrix" data-effect="rain" hidden="@Hidden("matrix")"><pre>@T["Prompt.Matrix"]</pre></div>
-                <div data-output="coffee" hidden="@Hidden("coffee")"><pre>@T["Prompt.Coffee"]</pre></div>
-                <div data-output="vim" hidden="@Hidden("vim")"><pre>@T["Prompt.Vim"]</pre></div>
-                <div data-output="exit" hidden="@Hidden("exit")"><pre>@T["Prompt.Exit"]</pre></div>
-            </div>
-        }
+        </div>
     </div>
 
     @* Le prompt est un vrai formulaire GET : il fonctionne sans JavaScript, et une commande

@@ -21,6 +21,7 @@
     var input = form.querySelector("input[name='c']");
     var prompt = form.querySelector(".cli__prompt");
     var screen = document.querySelector(".window__screen");
+    var initial = document.querySelector(".cli__initial");
     var log = document.createElement("div");
     var history = [];
     var historyIndex = 0;
@@ -152,6 +153,19 @@
      * Rend la main au formulaire quand la commande ne se traite pas ici : filtrer, ouvrir une
      * fiche, changer de page sont des navigations, et c'est le serveur qui les décide.
      */
+    /**
+     * Vide l'écran entier, et pas seulement ce que le prompt y a ajouté : ce que le serveur
+     * avait écrit — bannière, liste, compteur — en fait partie. La prochaine commande qui
+     * navigue recharge la page et le remet, comme un « ls » après un « clear ».
+     */
+    function clear() {
+        log.replaceChildren();
+
+        if (initial) {
+            initial.hidden = true;
+        }
+    }
+
     function handle(line) {
         var name = nameOf(line);
 
@@ -160,7 +174,7 @@
         }
 
         if (name === "clear") {
-            log.replaceChildren();
+            clear();
             return true;
         }
 
@@ -276,7 +290,7 @@
             complete();
         } else if (event.key === "l" && event.ctrlKey) {
             event.preventDefault();
-            log.replaceChildren();
+            clear();
         }
     });
 }());
