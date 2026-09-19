@@ -147,6 +147,44 @@ La chaîne complète est décrite dans `.github/workflows/ci-cd.yml` :
 > de créer un secret ou une variable qui le porte. Seul le `.env` écrit sur le serveur emploie
 > les noms attendus par le `docker-compose.yml`.
 
+### Reverse proxy et certificat
+
+Le conteneur n'écoute que sur le port `8082` de la machine ; nginx porte le TLS et publie le
+site. `/etc/nginx/sites-available/drangit.thognard.net` :
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name drangit.thognard.net;
+
+    location / {
+        proxy_pass http://127.0.0.1:8082;
+        proxy_http_version 1.1;
+
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+```bash
+sudo ln -s /etc/nginx/sites-available/drangit.thognard.net /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d drangit.thognard.net --redirect
+```
+
+Certbot ajoute lui-même le bloc TLS, la redirection HTTP → HTTPS, et installe la tâche de
+renouvellement.
+
+**Les quatre `proxy_set_header` ne sont pas décoratifs.** L'application reconstruit son
+adresse publique à partir d'eux (`UseForwardedHeaders` dans `Program.cs`) : sans `Host` et
+`X-Forwarded-Proto`, l'adresse canonique, les `hreflang`, le plan du site et les aperçus de
+partage porteraient `http://` et le nom du conteneur. Le site s'afficherait normalement —
+seuls les moteurs de recherche verraient le problème.
+
 ### Revenir en arrière
 
 `Actions → CI/CD → Run workflow`, en renseignant `rollback_tag` avec le SHA court d'une image
