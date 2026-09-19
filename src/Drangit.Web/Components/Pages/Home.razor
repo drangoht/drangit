@@ -3,6 +3,7 @@
 @inject IRepositoryCatalog Catalog
 @inject IStringLocalizer<SharedResources> T
 @inject IOptions<SiteOptions> Site
+@inject NavigationManager Navigation
 
 <PageTitle>@Site.Value.Name</PageTitle>
 @* Pas d'ImageUrl : l'accueil représente le site, pas le dépôt qui passe en vitrine.
@@ -110,10 +111,12 @@ else
             }
         </ul>
 
-        @* Recherche et langage demandent une saisie ou une liste : ils restent un formulaire
-           GET. Les critères déjà posés voyagent en champs cachés pour ne pas être perdus. *@
+        @* Le langage demande une liste : il reste un formulaire GET, et les critères déjà
+           posés y voyagent en champs cachés pour ne pas être perdus. La recherche, elle, a
+           quitté ce formulaire — c'est le prompt, en bas de page, qui la porte. *@
         <form method="get" class="filters__form" role="search">
             <input type="hidden" name="topic" value="@Topic" />
+            <input type="hidden" name="q" value="@Search" />
             @if (WithDemoOnly)
             {
                 <input type="hidden" name="demo" value="true" />
@@ -122,12 +125,6 @@ else
             {
                 <input type="hidden" name="active" value="true" />
             }
-
-            <div class="filters__field filters__field--grow">
-                <label for="q">@T["Filter.Search"]</label>
-                <input type="search" id="q" name="q" value="@Search"
-                       placeholder="@T["Filter.SearchPlaceholder"]" autocomplete="off" />
-            </div>
 
             <div class="filters__field">
                 <label for="lang">@T["Filter.Language"]</label>
@@ -168,11 +165,14 @@ else
         </ul>
     }
 
-    @* La ligne vide qui clôt une sortie de terminal : sans elle, la page s'arrête net sur
-       sa dernière ligne de données et l'illusion tombe. *@
-    <p class="cli__line cli__line--last" aria-hidden="true">
-        <span class="cli__prompt">@Prompt</span><span class="cli__caret"></span>
-    </p>
+    @* Le prompt est un vrai formulaire GET : il fonctionne sans JavaScript, et une commande
+       y mène à la même adresse qu'un clic sur le critère correspondant (ADR 0008). *@
+    <form method="get" class="cli__form" role="search">
+        <label class="cli__prompt" for="c">@Prompt</label>
+        <input type="text" id="c" name="c" autocomplete="off" spellcheck="false"
+               placeholder="@T["Prompt.Placeholder"]" aria-label="@T["Prompt.Label"]" />
+        <button type="submit" class="visually-hidden">@T["Filter.Apply"]</button>
+    </form>
 }
 
 @code {
@@ -234,6 +234,10 @@ else
     [SupplyParameterFromQuery(Name = "active")]
     private string? Active { get; set; }
 
+    /// <summary>Ligne saisie au prompt, à interpréter puis à effacer de l'adresse.</summary>
+    [SupplyParameterFromQuery(Name = "c")]
+    private string? Command { get; set; }
+
     private bool WithDemoOnly => bool.TryParse(Demo, out var demo) && demo;
 
     private bool ArchivedHidden => bool.TryParse(Active, out var active) && active;
@@ -279,6 +283,15 @@ else
         _demoCount = RepositoryFilter.CountWithDemo(_allRepositories);
         _archivedCount = RepositoryFilter.CountArchived(_allRepositories);
 
+        // Une commande saisie ne reste jamais dans l'adresse : elle est traduite en la même
+        // adresse qu'aurait produite un clic, puis on y redirige. Sans quoi « ?c=… » et
+        // « ?topic=… » seraient deux adresses pour la même page, partagées au hasard.
+        if (Command is not null)
+        {
+            Navigation.NavigateTo(PathOf(RepositoryCommand.Parse(Command, _allRepositories)));
+            return;
+        }
+
         _filter = new RepositoryFilter
         {
             SearchTerm = Search,
@@ -289,6 +302,37 @@ else
         };
 
         _visibleRepositories = _filter.Apply(_allRepositories);
+    }
+
+    /// <summary>Adresse relative où mène une commande, préfixe de langue compris par la base.</summary>
+    private static string PathOf(RepositoryCommand command) => command switch
+    {
+        RepositoryCommand.Open open => "repos/" + open.Slug.Value,
+        RepositoryCommand.GoToPage { Page: SitePage.About } => "about",
+        RepositoryCommand.Filter filter => PathOf(filter.Value),
+        _ => ".",
+    };
+
+    /// <summary>Adresse d'une liste filtrée : celle-là même que produisent les liens de la barre.</summary>
+    private static string PathOf(RepositoryFilter filter)
+    {
+        var query = new Dictionary<string, string?>(StringComparer.Ordinal);
+
+        AddIfSet(query, "q", filter.SearchTerm);
+        AddIfSet(query, "topic", filter.Topic);
+        AddIfSet(query, "lang", filter.Language);
+
+        if (filter.WithDemo)
+        {
+            query["demo"] = "true";
+        }
+
+        if (filter.HideArchived)
+        {
+            query["active"] = "true";
+        }
+
+        return QueryHelpers.AddQueryString(".", query);
     }
 
     private string HrefWithTopic(string? topic) => Href(topic, WithDemoOnly, ArchivedHidden);

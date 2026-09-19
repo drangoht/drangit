@@ -89,6 +89,69 @@ public sealed class SiteTests : IClassFixture<SiteFactoryFixture>
     }
 
     [Fact]
+    public async Task Prompt_UneCommandeDeFiltre_MeneAuMemeEndroitQueLeLienCorrespondant()
+    {
+        // La condition posée par l'ADR 0008 : sans JavaScript, taper la commande et cliquer
+        // le critère aboutissent à la même adresse, partageable.
+        var reponse = await CreateClient().GetAsync(
+            new Uri("/en/?c=--topic%3Dalgorithms", UriKind.Relative), CancellationToken.None);
+
+        reponse.StatusCode.ShouldBe(HttpStatusCode.Found);
+        reponse.Headers.Location!.PathAndQuery.ShouldBe("/en/?topic=algorithms");
+    }
+
+    [Fact]
+    public async Task Prompt_UneRechercheLibre_DevientLeCritereDeRecherche()
+    {
+        var reponse = await CreateClient().GetAsync(
+            new Uri("/en/?c=huffman", UriKind.Relative), CancellationToken.None);
+
+        reponse.StatusCode.ShouldBe(HttpStatusCode.Found);
+        reponse.Headers.Location!.PathAndQuery.ShouldBe("/en/?q=huffman");
+    }
+
+    [Fact]
+    public async Task Prompt_open_MeneALaFicheDuDepot()
+    {
+        var reponse = await CreateClient().GetAsync(
+            new Uri("/en/?c=open%20ASM-Gameboy-FirstProg", UriKind.Relative), CancellationToken.None);
+
+        reponse.StatusCode.ShouldBe(HttpStatusCode.Found);
+        reponse.Headers.Location!.PathAndQuery.ShouldBe("/en/repos/asm-gameboy-firstprog");
+    }
+
+    [Fact]
+    public async Task Prompt_cd_about_MeneALaPageAPropos()
+    {
+        var reponse = await CreateClient().GetAsync(
+            new Uri("/en/?c=cd%20about", UriKind.Relative), CancellationToken.None);
+
+        reponse.StatusCode.ShouldBe(HttpStatusCode.Found);
+        reponse.Headers.Location!.PathAndQuery.ShouldBe("/en/about");
+    }
+
+    [Fact]
+    public async Task Prompt_UneCommandeVide_RevientALAccueilSansCritere()
+    {
+        var reponse = await CreateClient().GetAsync(
+            new Uri("/en/?c=", UriKind.Relative), CancellationToken.None);
+
+        // Valider un prompt vide ne doit pas boucler ni laisser « c= » dans l'adresse.
+        reponse.StatusCode.ShouldBe(HttpStatusCode.Found);
+        reponse.Headers.Location!.PathAndQuery.ShouldBe("/en/");
+    }
+
+    [Fact]
+    public async Task Accueil_OffreLePromptCommeFormulaire()
+    {
+        var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
+
+        // Un vrai formulaire GET : le prompt fonctionne sans JavaScript (ADR 0008).
+        html.ShouldContain("class=\"cli__form\"");
+        html.ShouldContain("name=\"c\"");
+    }
+
+    [Fact]
     public async Task Accueil_NAfficheAucuneImage()
     {
         var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);

@@ -440,6 +440,46 @@ code {
     margin-top: 2.5rem;
 }
 
+/* Le prompt saisissable, en bas de page. Un champ sans cadre ni fond : ce qui se voit,
+   c'est l'invite et le texte tapé, comme dans un terminal. Le bouton d'envoi est là mais
+   masqué — la touche Entrée suffit, et un bouton « Appliquer » casserait l'illusion sans
+   rien apporter à qui navigue au clavier. */
+.cli__form {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6ch;
+    margin-top: 2.5rem;
+    padding: 0.5rem 0.4rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.95rem;
+}
+
+.cli__form input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    padding: 0;
+    background: none;
+    color: var(--accent);
+    font: inherit;
+    caret-color: var(--accent);
+}
+
+.cli__form input::placeholder {
+    color: color-mix(in srgb, var(--text-muted) 70%, transparent);
+}
+
+.cli__form input:focus {
+    outline: none;
+}
+
+/* La ligne entière prend la mise en avant du focus : le champ n'ayant pas de cadre, un
+   contour sur lui seul serait invisible au milieu du texte. */
+.cli__form:focus-within {
+    border-top-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
 /* Le bloc du curseur, à la fin de la sortie. Il clignote, sauf si le visiteur a demandé
    qu'on lui épargne les animations. */
 .cli__caret {

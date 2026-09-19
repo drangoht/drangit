@@ -122,6 +122,12 @@
   <data name="Filter.Apply" xml:space="preserve">
     <value>Apply</value>
   </data>
+  <data name="Prompt.Label" xml:space="preserve">
+    <value>Command line</value>
+  </data>
+  <data name="Prompt.Placeholder" xml:space="preserve">
+    <value>a name to search for, or --topic=unity, open &lt;repository&gt;, cd about</value>
+  </data>
   <data name="Repo.Stars" xml:space="preserve">
     <value>Stars</value>
   </data>

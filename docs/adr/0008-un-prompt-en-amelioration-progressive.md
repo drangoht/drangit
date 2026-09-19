@@ -113,10 +113,10 @@ et naviguer, il reste à sa place.
 
 ## Suivi
 
-- [ ] Le parseur de ligne de commande est écrit en TDD, côté serveur, et traduit vers
+- [x] Le parseur de ligne de commande est écrit en TDD, côté serveur, et traduit vers
       `RepositoryFilter` — il est le seul à connaître le vocabulaire des commandes.
-- [ ] Un test d'intégration vérifie qu'une commande de filtre soumise sans JavaScript rend la
+- [x] Un test d'intégration vérifie qu'une commande de filtre soumise sans JavaScript rend la
       même page que le lien de filtre correspondant.
-- [ ] Les filtres cliquables restent présents et utilisables au clavier : le prompt ne devient
+- [x] Les filtres cliquables restent présents et utilisables au clavier : le prompt ne devient
       jamais le seul moyen de filtrer.
 - [x] `CLAUDE.md` est amendé et renvoie à cet ADR.
