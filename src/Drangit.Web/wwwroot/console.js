@@ -23,9 +23,48 @@
     var screen = document.querySelector(".window__screen");
     var initial = document.querySelector(".cli__initial");
     var log = document.createElement("div");
-    var history = [];
-    var historyIndex = 0;
     var tried = Object.create(null);
+
+    // L'historique survit au rechargement : une commande qui filtre ou qui ouvre une fiche
+    // est une vraie navigation (ADR 0008), et la page repart de zéro à chaque fois. Sans
+    // cela, la flèche du haut ne rappellerait que les commandes sans effet de bord.
+    // sessionStorage plutôt que localStorage : un historique de terminal appartient à la
+    // session, pas au navigateur, et il n'a rien à faire là dans six mois.
+    var HISTORY_KEY = "drangit.console.history";
+    var HISTORY_MAX = 50;
+
+    var history = read();
+    var historyIndex = history.length;
+
+    function read() {
+        try {
+            var stored = JSON.parse(window.sessionStorage.getItem(HISTORY_KEY) || "[]");
+            return Array.isArray(stored) ? stored : [];
+        } catch (error) {
+            // Navigation privée, stockage refusé, contenu abîmé : l'historique est un
+            // confort, son absence ne doit rien empêcher.
+            return [];
+        }
+    }
+
+    function remember(line) {
+        // Comme un shell qui ignore les doublons : rappeler trois fois « ls » n'aide personne.
+        if (history[history.length - 1] !== line) {
+            history.push(line);
+        }
+
+        if (history.length > HISTORY_MAX) {
+            history = history.slice(-HISTORY_MAX);
+        }
+
+        historyIndex = history.length;
+
+        try {
+            window.sessionStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+        } catch (error) {
+            // Rien à faire : la commande, elle, part quand même.
+        }
+    }
 
     log.className = "cli__log";
 
@@ -252,8 +291,9 @@
         var line = input.value.trim();
 
         if (line) {
-            history.push(line);
-            historyIndex = history.length;
+            // Avant le départ du formulaire : quand la commande navigue, ce code ne sera
+            // plus là pour le faire.
+            remember(line);
         }
 
         if (handle(line)) {
