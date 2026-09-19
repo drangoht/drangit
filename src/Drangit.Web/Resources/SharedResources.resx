@@ -313,4 +313,19 @@ HTTP 418 — I'm a teapot.</value>
   <data name="Prompt.Stats.Archived" xml:space="preserve">
     <value>archived</value>
   </data>
+  <data name="Prompt.Boot" xml:space="preserve">
+    <value>type "help" for the list of commands, or click an example below the window.</value>
+  </data>
+  <data name="Prompt.Hints" xml:space="preserve">
+    <value>help lists everything · Tab completes · ↑ ↓ history · Ctrl+L clears</value>
+  </data>
+  <data name="Prompt.Examples" xml:space="preserve">
+    <value>Example commands</value>
+  </data>
+  <data name="Listing.Name" xml:space="preserve">
+    <value>repository</value>
+  </data>
+  <data name="Listing.Pushed" xml:space="preserve">
+    <value>pushed</value>
+  </data>
 </root>

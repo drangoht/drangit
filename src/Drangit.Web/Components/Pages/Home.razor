@@ -18,7 +18,7 @@
 <div class="window">
     <div class="window__bar">
         <span class="window__dots" aria-hidden="true"></span>
-        <span class="window__name">@Site.Value.Name — bash</span>
+        <span class="window__name">@Site.Value.Name.ToLowerInvariant() — bash</span>
         <span class="window__meta">@_allRepositories.Count @T["Prompt.Stats.Repositories"]</span>
     </div>
 
@@ -30,8 +30,9 @@
 
         @* Le titre et l'intro restent, en ligne de commentaire : une page sans <h1> n'est
            pas indexable, et le visiteur a droit à une phrase qui dit où il est. *@
-        <h1 class="cli__note">// @T["Home.Title"]</h1>
+        <h1 class="cli__note">// @T["Home.Title"] — @_allRepositories.Count @T["Prompt.Stats.Repositories"], @_availableLanguages.Count @T["Prompt.Stats.Languages"]</h1>
         <p class="cli__note">// @T["Home.Intro"]</p>
+        <p class="cli__boot">@T["Prompt.Boot"]</p>
 
         @if (_allRepositories.Count == 0)
         {
@@ -55,6 +56,15 @@
             }
             else
             {
+                @* Les en-têtes de colonnes, comme les écrirait un « ls -l ». Décoratifs pour
+                   qui écoute la page : chaque ligne porte déjà ses valeurs en toutes lettres. *@
+                <p class="listing__head" aria-hidden="true">
+                    <span>@T["Repo.Language"]</span>
+                    <span>@T["Listing.Pushed"]</span>
+                    <span>@T["Repo.Stars"]</span>
+                    <span>@T["Listing.Name"]</span>
+                </p>
+
                 <ul class="listing">
                     @foreach (var repository in Listed)
                     {
@@ -143,6 +153,20 @@
     </form>
 </div>
 
+@* Les raccourcis n'existent que si le script est là : il retire lui-même l'attribut. Les
+   annoncer sans lui serait mentir. *@
+<p class="cli__hints" hidden>@T["Prompt.Hints"]</p>
+
+@* Des liens, et non des boutons : ils mènent à la commande par la même adresse que la
+   saisie, donc sans JavaScript. C'est aussi ce qui remplace la découverte qu'offrait la
+   barre de critères (ADR 0010). *@
+<nav class="cli__examples" aria-label="@T["Prompt.Examples"]">
+    @foreach (var example in Examples)
+    {
+        <a class="cli__example" href="@QueryHelpers.AddQueryString(".", "c", example)">@example</a>
+    }
+</nav>
+
 @code {
     /// <summary>
     /// Le nom du site dessiné en caractères, tel qu'un programme l'écrirait au démarrage.
@@ -177,6 +201,13 @@
     /// </remarks>
     private static readonly string[] KnownOutputs =
         ["help", "whoami", "stats", "topics", "langs", "cache", "eggs", "sudo", "matrix", "coffee", "vim", "exit"];
+
+    /// <summary>
+    /// Commandes proposées sous la fenêtre, pour ne pas laisser le visiteur devant un prompt
+    /// vide. Elles couvrent les trois familles : filtrer, s'informer, et perdre son temps.
+    /// </summary>
+    private static readonly string[] Examples =
+        ["help", "ls --demo", "ls --topic=unity", "find huffman", "stats", "topics", "whoami", "eggs"];
 
     /// <summary>Sortie demandée au prompt, quand la commande en désigne une.</summary>
     private string? _output;

@@ -28,6 +28,14 @@
     log.className = "cli__log";
     form.parentNode.insertBefore(log, form);
 
+    // Les raccourcis sont annoncés seulement maintenant : sans ce fichier, ni Tab ni Ctrl+L
+    // ne font quoi que ce soit, et les afficher d'emblée promettrait ce qui n'existe pas.
+    var hints = document.querySelector(".cli__hints");
+
+    if (hints) {
+        hints.hidden = false;
+    }
+
     // Alias qui n'existent que pour le confort de frappe : le serveur, lui, n'en connaît
     // aucun — ce sont des commandes qui ne le concernent pas.
     var ALIASES = {

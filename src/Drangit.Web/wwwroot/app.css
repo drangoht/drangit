@@ -301,6 +301,8 @@ code {
     border-radius: var(--radius);
     background: var(--bg);
     overflow: hidden;
+    /* La lueur que laisse un écran allumé dans une pièce sombre. */
+    box-shadow: 0 24px 60px -30px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .window__bar {
@@ -332,8 +334,27 @@ code {
     font-variant-numeric: tabular-nums;
 }
 
+/* L'écran défile dans la fenêtre plutôt que d'allonger la page : le prompt reste visible au
+   bas du cadre, comme dans un terminal, et la sortie s'empile au-dessus de lui. La trame de
+   balayage donne le grain d'un écran ; elle est en fond, donc sous le texte. */
 .window__screen {
+    height: min(72vh, 640px);
+    overflow-y: auto;
     padding: 1.1rem 1.15rem 0.5rem;
+    background: repeating-linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--accent) 4%, transparent) 0 1px,
+        transparent 1px 3px
+    );
+}
+
+/* Sur un écran bas ou un téléphone, une hauteur fixe enfermerait la liste dans une fente :
+   la fenêtre reprend alors la hauteur de son contenu. */
+@media (max-height: 40rem), (max-width: 34rem) {
+    .window__screen {
+        height: auto;
+        max-height: none;
+    }
 }
 
 /* --- Sortie de terminal --------------------------------------------------- */
@@ -361,6 +382,66 @@ code {
 
 .cli__prompt {
     color: var(--accent);
+}
+
+/* Ce qu'un programme écrit après sa bannière : ce qu'on peut lui demander. */
+.cli__boot {
+    margin: 0.9rem 0 0;
+    color: var(--warning);
+    font-size: 0.9rem;
+}
+
+/* Les raccourcis et les exemples, hors du cadre : ce sont des indications sur la fenêtre,
+   pas une sortie de la fenêtre. */
+.cli__hints {
+    margin: 0.9rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.cli__examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+}
+
+.cli__example {
+    padding: 0.2rem 0.6rem;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.cli__example:hover,
+.cli__example:focus-visible {
+    border-color: var(--accent);
+    color: var(--accent);
+    text-decoration: none;
+}
+
+/* Les en-têtes de colonnes de la liste, calés sur la grille des lignes. */
+.listing__head {
+    display: grid;
+    grid-template-columns: 7rem 6rem 3.5rem minmax(0, 1fr);
+    gap: 1rem;
+    margin: 1.25rem 0 0.35rem;
+    padding: 0 0.4rem;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+/* La colonne des étoiles se lit alignée à droite dans les lignes : son en-tête suit. */
+.listing__head span:nth-child(3) {
+    text-align: right;
+}
+
+@media (max-width: 52rem) {
+    .listing__head {
+        display: none;
+    }
 }
 
 /* Le titre et l'intro, écrits comme des lignes de commentaire : ils gardent leur rôle —
