@@ -11,6 +11,11 @@
          Title="@Site.Value.Name"
          Description="@T["Home.Intro"]" />
 
+@* La bannière tient lieu de titre d'affichage : la peau n'a pas de fonte d'affichage, c'est
+   le dessin en caractères qui en fait office (ADR 0008). Elle est décorative pour qui écoute
+   la page — le titre de niveau 1 juste en dessous porte le texte. *@
+<pre class="cli__banner" role="img" aria-label="@Site.Value.Name">@Banner</pre>
+
 <h1 class="page-title">@T["Home.Title"]</h1>
 <p class="page-intro">@T["Home.Intro"]</p>
 
@@ -23,11 +28,30 @@ else
     @* La vitrine ne s'affiche pas sous filtre : elle doublonnerait les résultats. *@
     @if (Hero is { } hero)
     {
+        <p class="cli__line" aria-hidden="true">
+            <span class="cli__prompt">@Prompt</span> repos --featured
+        </p>
+
         <article class="hero">
-            <RepositoryCover Repository="hero" Class="cover--fill" Eager="true" />
             <div class="hero__body">
-                <p class="hero__eyebrow">@T["Home.Featured"]</p>
+                <p class="hero__eyebrow">[ @T["Home.Featured"] ]</p>
                 <h2 class="hero__title">@hero.Name</h2>
+                <p class="hero__facts">
+                    @if (hero.Language is { } language)
+                    {
+                        <span style="--cover-ink: @RepositoryVisual.InkOf(language)">@language</span>
+                    }
+                    @if (hero.Stars > 0)
+                    {
+                        <span title="@T["Repo.Stars"]">★ @hero.Stars.ToString("N0", CultureInfo.CurrentCulture)</span>
+                    }
+                    @if (hero.PushedAt is { } pushedAt)
+                    {
+                        <time datetime="@pushedAt.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)">
+                            @pushedAt.ToString("d", CultureInfo.CurrentCulture)
+                        </time>
+                    }
+                </p>
                 @if (hero.Description.For(CultureInfo.CurrentUICulture) is { } description)
                 {
                     <p class="hero__tagline">@description</p>
@@ -44,6 +68,10 @@ else
             </div>
         </article>
     }
+
+    <p class="cli__line" aria-hidden="true">
+        <span class="cli__prompt">@Prompt</span> repos @_filter.ToCommandLine()
+    </p>
 
     @* Les critères sont des liens : une sélection produit une URL partageable et le tri
        fonctionne sans JavaScript — condition d'un rendu serveur statique. *@
@@ -132,18 +160,42 @@ else
     }
     else
     {
-        <ul class="grid">
+        <ul class="listing">
             @foreach (var repository in Listed)
             {
-                <li class="grid__item">
-                    <RepositoryCard Repository="repository" />
-                </li>
+                <RepositoryRow Repository="repository" />
             }
         </ul>
     }
+
+    @* La ligne vide qui clôt une sortie de terminal : sans elle, la page s'arrête net sur
+       sa dernière ligne de données et l'illusion tombe. *@
+    <p class="cli__line cli__line--last" aria-hidden="true">
+        <span class="cli__prompt">@Prompt</span><span class="cli__caret"></span>
+    </p>
 }
 
 @code {
+    /// <summary>
+    /// Le nom du site dessiné en caractères, tel qu'un programme l'écrirait au démarrage.
+    /// </summary>
+    /// <remarks>
+    /// Écrit ici et non dans le balisage : dans un <c>&lt;pre&gt;</c>, l'indentation du
+    /// fichier source ferait partie du rendu, et le dessin serait décalé de la marge du
+    /// composant.
+    /// </remarks>
+    private const string Banner = """
+ ██████╗ ██████╗  █████╗ ███╗   ██╗ ██████╗ ██╗████████╗
+ ██╔══██╗██╔══██╗██╔══██╗████╗  ██║██╔════╝ ██║╚══██╔══╝
+ ██║  ██║██████╔╝███████║██╔██╗ ██║██║  ███╗██║   ██║
+ ██║  ██║██╔══██╗██╔══██║██║╚██╗██║██║   ██║██║   ██║
+ ██████╔╝██║  ██║██║  ██║██║ ╚████║╚██████╔╝██║   ██║
+ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝   ╚═╝
+""";
+
+    /// <summary>Invite de commande décorative, répétée avant chaque section.</summary>
+    private const string Prompt = "drangoht@~/repos $";
+
     /// <summary>
     /// Nombre de sujets proposés en filtre.
     /// </summary>

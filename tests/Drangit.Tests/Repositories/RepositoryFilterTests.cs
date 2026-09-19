@@ -211,4 +211,43 @@ public sealed class RepositoryFilterTests
         RepositoryFilter.CountArchived(Tous).ShouldBe(1);
         RepositoryFilter.CountArchived([]).ShouldBe(0);
     }
+
+    [Fact]
+    public void ToCommandLine_SansCritere_ListeToutLeCatalogue()
+    {
+        RepositoryFilter.Empty.ToCommandLine().ShouldBe("--list");
+    }
+
+    [Fact]
+    public void ToCommandLine_EcritUnDrapeauParCritere()
+    {
+        var filtre = new RepositoryFilter
+        {
+            Topic = "unity",
+            Language = "C#",
+            WithDemo = true,
+            HideArchived = true,
+        };
+
+        // L'ordre est celui de la barre de filtres, pour que la ligne se lise comme ce que
+        // le visiteur vient de cliquer.
+        filtre.ToCommandLine().ShouldBe("--topic=unity --lang=C# --demo --no-archived");
+    }
+
+    [Fact]
+    public void ToCommandLine_QuandLeTermeContientUneEspace_LeMetEntreGuillemets()
+    {
+        var filtre = new RepositoryFilter { SearchTerm = "game dev" };
+
+        // Sans guillemets, la ligne affichée ne serait pas celle qu'on pourrait retaper.
+        filtre.ToCommandLine().ShouldBe("\"game dev\"");
+    }
+
+    [Fact]
+    public void ToCommandLine_EcritLeTermeDeRechercheEnDernier()
+    {
+        var filtre = new RepositoryFilter { SearchTerm = "huffman", Topic = "algorithms" };
+
+        filtre.ToCommandLine().ShouldBe("--topic=algorithms huffman");
+    }
 }

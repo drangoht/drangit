@@ -409,81 +409,114 @@ code {
     text-decoration: none;
 }
 
-/* --- Grille de dépôts ----------------------------------------------------- */
+/* --- Sortie de terminal --------------------------------------------------- */
 
-.grid {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    gap: 1.25rem;
-    grid-template-columns: repeat(auto-fill, minmax(min(19rem, 100%), 1fr));
+/* Le nom du site dessiné en caractères : la peau n'a pas de fonte d'affichage, et c'est ce
+   dessin qui en tient lieu. Il déborde sur les écrans étroits, d'où le défilement propre à
+   ce bloc — le réduire davantage le rendrait illisible. */
+.cli__banner {
+    margin: 0 0 1.25rem;
+    overflow-x: auto;
+    color: var(--accent);
+    text-shadow: 0 0 10px color-mix(in srgb, var(--accent) 45%, transparent);
+    font-size: clamp(5.5px, 1.5vw, 10px);
+    line-height: 1.15;
+}
+
+/* Les lignes de commande décoratives qui annoncent chaque section. Elles ne sont pas
+   cliquables et ne sont pas lues : ce qu'elles disent, la section le montre juste après. */
+.cli__line {
+    margin: 2rem 0 0.75rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+}
+
+.cli__prompt {
+    color: var(--accent);
+}
+
+.cli__line--last {
+    margin-top: 2.5rem;
+}
+
+/* Le bloc du curseur, à la fin de la sortie. Il clignote, sauf si le visiteur a demandé
+   qu'on lui épargne les animations. */
+.cli__caret {
+    display: inline-block;
+    width: 0.55em;
+    height: 1.05em;
+    margin-left: 0.5ch;
+    background: var(--accent);
+    vertical-align: text-bottom;
+    animation: cli-blink 1.1s steps(1) infinite;
+}
+
+@keyframes cli-blink {
+    50% {
+        opacity: 0;
+    }
 }
 
 /* --- Vitrine -------------------------------------------------------------- */
 
-/* Pleine largeur plutôt qu'une grande tuile dans la grille : les images de partage de
-   GitHub sont en 2/1 et une tuile haute les recadrerait en portrait, tandis qu'une
-   bande évite la cellule vide que laisse un catalogue dont le compte ne tombe pas juste. */
+/* Un bloc encadré, sans illustration : la vitrine est la première sortie de la commande
+   « repos --featured », et une sortie de terminal ne montre pas d'images. */
 .hero {
     position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    margin-top: 2rem;
-    min-height: min(22rem, 58vh);
+    margin-top: 0.5rem;
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    background: var(--bg-elevated);
-    overflow: hidden;
-}
-
-/* Le voile qui protège la colonne de texte : la couverture peut être une capture
-   d'écran claire, et le titre y deviendrait illisible. Il vaut pour la couverture
-   dessinée comme pour une capture — on ne choisit pas les secondes pour cela. */
-.hero .cover--fill::after {
-    content: "";
-    position: absolute;
-    inset: 0;
     background:
         linear-gradient(
-            to right,
-            color-mix(in srgb, var(--bg) 92%, transparent) 0%,
-            color-mix(in srgb, var(--bg) 60%, transparent) 45%,
-            transparent 80%
+            180deg,
+            color-mix(in srgb, var(--accent) 6%, transparent) 0%,
+            transparent 70%
         ),
-        linear-gradient(
-            to top,
-            var(--bg-elevated) 3%,
-            color-mix(in srgb, var(--bg) 50%, transparent) 45%,
-            transparent 85%
-        );
+        var(--bg-elevated);
 }
 
 .hero__body {
-    position: relative;
-    padding: clamp(1.25rem, 3vw, 2.25rem);
+    padding: clamp(1.1rem, 3vw, 1.9rem);
 }
 
 .hero__eyebrow {
-    margin: 0 0 0.5rem;
+    margin: 0 0 0.6rem;
     font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
     letter-spacing: 0.12em;
-    color: var(--accent);
+    text-transform: uppercase;
+    color: var(--warning);
 }
 
 .hero__title {
-    margin: 0 0 0.5rem;
-    font-size: clamp(1.6rem, 1.1rem + 1.8vw, 2.4rem);
-    letter-spacing: -0.02em;
+    margin: 0 0 0.4rem;
+    font-size: clamp(1.3rem, 1rem + 1.4vw, 1.9rem);
+    color: var(--text);
+    overflow-wrap: anywhere;
+}
+
+/* La ligne de faits de la vitrine, séparée par des points médians comme un en-tête de
+   sortie. Le séparateur est décoratif : il ne s'affiche pas avant le premier élément. */
+.hero__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.9rem;
+    margin: 0 0 0.9rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px dashed var(--border);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.hero__facts span:first-child {
+    color: var(--cover-ink, var(--accent));
 }
 
 .hero__tagline {
     margin: 0;
-    color: var(--text-muted);
-    max-width: 48ch;
+    color: var(--text);
+    max-width: 62ch;
 }
 
 .hero__actions {
@@ -493,73 +526,117 @@ code {
     margin-top: 1.25rem;
 }
 
-.hero__actions .button--ghost {
-    background: color-mix(in srgb, var(--bg) 65%, transparent);
-    color: var(--text);
+/* --- Liste des dépôts ----------------------------------------------------- */
+
+/* Des colonnes alignées plutôt qu'un mur de tuiles : quarante-sept dépôts se parcourent,
+   ils ne se contemplent pas. Les colonnes fixes en tête, la description en dernier —
+   c'est elle qui varie le plus, et c'est elle qu'on tronque si la place manque. */
+.listing {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border-top: 1px solid var(--border);
 }
 
-/* --- Carte de dépôt ------------------------------------------------------- */
-
-.card {
+.listing__item {
     display: flex;
-    flex-direction: column;
-    height: 100%;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--bg-elevated);
-    overflow: hidden;
-    transition: border-color var(--transition), transform var(--transition);
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 1rem;
+    padding: 0.5rem 0.4rem;
+    border-bottom: 1px dotted color-mix(in srgb, var(--border) 85%, transparent);
 }
 
-.card:hover {
-    border-color: var(--border-strong);
-    transform: translateY(-2px);
+.listing__item:hover {
+    background: color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
 /* Un dépôt archivé reste listé, mais ne se présente pas comme le reste : il est en
    retrait, pas masqué. */
-.card--archived .cover {
-    filter: grayscale(1);
-    opacity: 0.72;
+.listing__item--archived {
+    opacity: 0.66;
 }
 
-.card__link {
+.listing__link {
+    display: grid;
+    grid-template-columns: 7rem 6rem 3.5rem minmax(11rem, auto) minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0.15rem 1rem;
+    flex: 1 1 32rem;
+    min-width: 0;
     color: inherit;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
+    font-size: 0.9rem;
+    font-variant-numeric: tabular-nums;
 }
 
-.card__link:hover {
+.listing__link:hover,
+.listing__link:focus-visible {
+    color: inherit;
     text-decoration: none;
-    color: inherit;
 }
 
-.card__body {
-    padding: 0.9rem 1rem 0.5rem;
-    flex: 1;
+.listing__language {
+    color: var(--cover-ink, var(--text-muted));
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.card__title {
-    font-size: 1.05rem;
-    margin-bottom: 0.35rem;
-    /* Les noms de dépôts sont longs et sans espaces : sans cela, ils débordent de la carte. */
+.listing__date,
+.listing__stars {
+    color: var(--text-muted);
+    font-size: 0.85em;
+}
+
+.listing__stars {
+    color: var(--warning);
+    text-align: right;
+}
+
+.listing__name {
+    color: var(--text);
     overflow-wrap: anywhere;
 }
 
-.card__tagline {
-    margin: 0;
-    color: var(--text-muted);
-    font-size: 0.9rem;
+.listing__link:hover .listing__name {
+    text-decoration: underline;
 }
 
-.card__meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem 1rem;
+.listing__owner {
+    color: var(--text-muted);
+}
+
+.listing__description {
+    color: var(--text-muted);
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* En dessous de cette largeur, cinq colonnes ne tiennent plus : la ligne se replie en deux
+   niveaux — l'identité au-dessus, les chiffres en dessous — plutôt que de se comprimer
+   jusqu'à l'illisible. */
+@media (max-width: 52rem) {
+    .listing__link {
+        grid-template-columns: 6rem 5.5rem minmax(0, 1fr);
+        flex-basis: 100%;
+    }
+
+    .listing__name {
+        grid-column: 1 / -1;
+        order: -1;
+        font-size: 1.05em;
+    }
+
+    .listing__description {
+        grid-column: 1 / -1;
+        white-space: normal;
+    }
+
+    .listing__stars {
+        text-align: left;
+    }
 }
 
 /* --- Illustration d'un dépôt ---------------------------------------------- */
@@ -567,8 +644,8 @@ code {
 /* La vignette est dessinée, pas chargée : la teinte vient du langage, l'inclinaison du
    dégradé du nom — sans quoi deux dépôts du même langage auraient la même image. Elle se lit
    comme une ligne de terminal, et la trame de balayage lui donne le grain d'un écran sans
-   rien masquer. Ces deux couches de fond tiennent lieu de pseudo-élément : la vitrine en a
-   déjà un, et un élément n'a qu'un ::after. */
+   rien masquer. La trame est une couche de fond et non un pseudo-élément : la capture se
+   pose par-dessus en position absolue, et un ::after passerait devant elle. */
 .cover {
     position: relative;
     aspect-ratio: 2 / 1;
@@ -649,26 +726,6 @@ code {
     width: 100%;
     height: 100%;
     object-fit: cover;
-}
-
-/* Variante vitrine : une bande derrière le texte, et non une tuile. Elle reprend la teinte
-   du langage, car le titre du dépôt s'y affiche déjà en grand juste à côté. */
-.cover--fill {
-    position: absolute;
-    inset: 0;
-    aspect-ratio: auto;
-    padding: 0;
-    background:
-        linear-gradient(
-            var(--cover-angle, 45deg),
-            color-mix(in srgb, var(--cover-accent, var(--accent)) 38%, var(--bg-elevated)) 0%,
-            var(--bg-input) 62%
-        );
-}
-
-.cover--fill .cover__title,
-.cover--fill .cover__language {
-    display: none;
 }
 
 /* Variante fiche : une tuile à côté du titre, pas une bande pleine largeur. */
@@ -915,9 +972,5 @@ code {
     *::after {
         transition-duration: 0.01ms !important;
         animation-duration: 0.01ms !important;
-    }
-
-    .card:hover {
-        transform: none;
     }
 }

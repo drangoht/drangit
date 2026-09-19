@@ -57,9 +57,52 @@ public sealed class SiteTests : IClassFixture<SiteFactoryFixture>
     }
 
     [Fact]
-    public async Task Accueil_QuandUneCaptureEstDeclaree_ElleSAfficheParDessusLaVignette()
+    public async Task Accueil_SAnnonceParLaBanniereDuSite()
     {
         var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
+
+        // La bannière tient lieu de titre d'affichage : la peau n'a pas de fonte
+        // d'affichage, c'est le dessin en caractères qui en fait office.
+        html.ShouldContain("class=\"cli__banner\"");
+        html.ShouldContain("aria-label=\"Drangit\"");
+    }
+
+    [Fact]
+    public async Task Accueil_EcritChaqueSectionCommeUneCommandeSaisie()
+    {
+        var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
+
+        // Ce sont des lignes de commande décoratives : elles annoncent ce que la section
+        // affiche, comme la sortie d'un programme le ferait.
+        html.ShouldContain("class=\"cli__line\"");
+        html.ShouldContain("repos --featured");
+    }
+
+    [Fact]
+    public async Task Accueil_ListeLesDepotsEnColonnesEtNonEnVignettes()
+    {
+        var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
+
+        // Quarante-sept dépôts se lisent en colonnes alignées, pas en mur de tuiles.
+        html.ShouldContain("class=\"listing\"");
+        html.ShouldNotContain("class=\"grid\"");
+    }
+
+    [Fact]
+    public async Task Accueil_NAfficheAucuneImage()
+    {
+        var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
+
+        // Une sortie de terminal ne montre pas d'images — pas même les captures du fichier
+        // éditorial, qui restent sur la fiche du dépôt.
+        html.ShouldNotContain("<img");
+        html.ShouldNotContain("https://exemple.test/huffman.png");
+    }
+
+    [Fact]
+    public async Task Fiche_QuandUneCaptureEstDeclaree_ElleSAfficheParDessusLaVignette()
+    {
+        var html = await CreateClient().GetStringAsync("/en/repos/algorithme-de-huffman", CancellationToken.None);
 
         // Une capture du fichier éditorial montre le projet lui-même : elle, elle vaut
         // la place qu'elle prend.
@@ -68,34 +111,13 @@ public sealed class SiteTests : IClassFixture<SiteFactoryFixture>
     }
 
     [Fact]
-    public async Task Accueil_DessineUneVignettePourChaqueDepot()
+    public async Task Fiche_DessineUneVignettePourUnDepotSansCapture()
     {
-        var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
+        var html = await CreateClient().GetStringAsync("/en/repos/asm-gameboy-firstprog", CancellationToken.None);
 
-        // Sans elle, un dépôt sans capture laisserait un trou dans la grille.
+        // Sans elle, une fiche sans capture n'aurait aucune illustration.
         html.ShouldContain("--cover-accent:");
-    }
-
-    [Fact]
-    public async Task Accueil_LaVignetteEcritLeNomCompletDuDepot()
-    {
-        var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
-
-        // Le compte en gris, le dépôt en clair : c'est ce qui distingue une vignette d'une
-        // autre au premier coup d'œil, avant même la teinte du langage.
         html.ShouldContain("<span class=\"cover__owner\">drangoht/</span>ASM-Gameboy-FirstProg");
-    }
-
-    [Fact]
-    public async Task Vitrine_AfficheLaCaptureDuFichierEditorial()
-    {
-        var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
-
-        var debut = html.IndexOf("<article class=\"hero\">", StringComparison.Ordinal);
-        debut.ShouldBeGreaterThan(-1);
-        var vitrine = html[debut..html.IndexOf("</article>", debut, StringComparison.Ordinal)];
-
-        vitrine.ShouldContain("https://exemple.test/huffman.png");
     }
 
     [Fact]
