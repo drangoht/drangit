@@ -78,6 +78,11 @@ public sealed class RepositoryCatalogSnapshotStoreTests : IDisposable
         // Sur un volume en lecture seule, l'écriture échoue : le site doit continuer de
         // servir la réponse qu'il vient pourtant d'obtenir.
         var chemin = Path.Combine(Path.GetTempPath(), "drangit-snapshot", Guid.NewGuid().ToString("N"));
+
+        // Le dossier parent est créé explicitement : sans cela, ce test ne passe que si un
+        // autre l'a créé avant lui. Il passait sous Windows et échouait en CI, au gré de
+        // l'ordre d'exécution.
+        Directory.CreateDirectory(Path.GetDirectoryName(chemin)!);
         await File.WriteAllTextAsync(chemin, "ceci est un fichier, pas un répertoire", CancellationToken.None);
 
         try
