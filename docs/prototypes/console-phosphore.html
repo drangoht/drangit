@@ -1,0 +1,1005 @@
+<!doctype html>
+<!--
+    Maquette de la direction visuelle « Console phosphore » — ADR-0008.
+
+    Page autonome, à ouvrir directement dans un navigateur. Elle ne fait pas partie du
+    site : rien ici n'est compilé, servi ni déployé. Elle a servi à valider le jeu de
+    commandes avant de l'écrire en C#, et reste la référence de ce qui a été décidé.
+
+    Les dépôts, les sujets et les descriptions viennent de data/repositories.json.
+    Les étoiles, les dates et le quota sont plausibles mais inventés.
+-->
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Console Drangit</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+</head>
+<body>
+
+<style>
+:root {
+    --bg: #04070a;
+    --chrome: #0a1015;
+    --glow: #3ef08c;
+    --bright: #d7ffe9;
+    --dim: #4c8a6d;
+    --amber: #ffb454;
+    --rule: #123526;
+    --rose: #ff6b6b;
+    --blue: #48a9ff;
+    --violet: #a78bfa;
+    color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: #01030a;
+    color: var(--glow);
+    font-family: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-size: 13.5px;
+    line-height: 1.7;
+    padding: 18px;
+    -webkit-font-smoothing: antialiased;
+}
+
+.page { max-width: 68rem; margin-inline: auto; display: grid; gap: 12px; }
+
+.window {
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--bg);
+    box-shadow: 0 24px 60px -30px rgba(62, 240, 140, .35);
+}
+
+.titlebar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    background: var(--chrome);
+    border-bottom: 1px solid var(--rule);
+    color: var(--dim);
+    font-size: 11px;
+}
+
+.dot { width: 9px; height: 9px; border-radius: 50%; background: #1e3c2e; flex: none; }
+.titlebar .who { margin-left: 4px; }
+.titlebar .quota { margin-left: auto; white-space: nowrap; }
+
+.screen {
+    position: relative;
+    height: min(72vh, 640px);
+    min-height: 360px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 14px 14px 10px;
+    cursor: text;
+}
+
+.window::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(to bottom, rgba(62, 240, 140, .04) 0 1px, transparent 1px 3px);
+    z-index: 2;
+}
+
+.out > * { margin: 0; }
+.out > * + * { margin-top: 2px; }
+
+.blk { margin-block: 8px !important; }
+.dim { color: var(--dim); }
+.glow { color: var(--glow); }
+.bright { color: var(--bright); }
+.amber { color: var(--amber); }
+.rose { color: var(--rose); }
+.blue { color: var(--blue); }
+.violet { color: var(--violet); }
+.b { font-weight: 600; }
+
+.echo { color: var(--dim); }
+.echo .cmd { color: var(--glow); }
+.echo .user { color: #7cf5b3; }
+.echo .path { color: var(--blue); }
+
+pre {
+    margin: 0;
+    font: inherit;
+    white-space: pre;
+    overflow-x: auto;
+    padding-bottom: 2px;
+}
+
+pre.wrapped { white-space: pre-wrap; }
+
+.banner {
+    color: var(--glow);
+    text-shadow: 0 0 10px rgba(62, 240, 140, .5);
+    font-size: clamp(5.5px, 1.45vw, 10px);
+    line-height: 1.15;
+}
+
+.url { color: var(--blue); }
+.url::before { content: "→ "; color: var(--dim); }
+
+.card {
+    border: 1px solid var(--rule);
+    padding: 10px 12px;
+    margin-block: 10px !important;
+    background: linear-gradient(180deg, rgba(62, 240, 140, .05), transparent 70%);
+}
+
+.card h2 { margin: 0 0 4px; font-size: 15px; font-weight: 600; color: var(--bright); }
+.card p { margin: 6px 0 0; color: #a8f2cb; max-width: 70ch; }
+.card .facts { color: var(--dim); }
+
+.prompt-line {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    padding: 4px 14px 16px;
+    position: relative;
+    z-index: 1;
+}
+
+.ps1 { white-space: nowrap; color: #7cf5b3; }
+.ps1 .path { color: var(--blue); }
+.ps1 .sep { color: var(--dim); }
+
+.field { position: relative; flex: 1; min-width: 0; }
+
+input[type="text"] {
+    width: 100%;
+    background: none;
+    border: 0;
+    padding: 0;
+    color: var(--glow);
+    font: inherit;
+    caret-color: transparent;
+    outline: none;
+}
+
+input[type="text"]::placeholder { color: #2f5a45; }
+
+.caret {
+    position: absolute;
+    top: .12em;
+    width: 8px;
+    height: 1.05em;
+    background: var(--glow);
+    animation: blink 1.1s steps(1) infinite;
+    pointer-events: none;
+}
+
+@keyframes blink { 50% { opacity: 0; } }
+
+.hints {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    font-size: 11.5px;
+    color: var(--dim);
+}
+
+.hints b { color: var(--glow); font-weight: 500; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.chip {
+    border: 1px solid var(--rule);
+    background: none;
+    color: var(--dim);
+    font: inherit;
+    font-size: 11.5px;
+    padding: 2px 9px;
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+.chip:hover, .chip:focus-visible { border-color: var(--glow); color: var(--glow); }
+
+.note {
+    font-size: 11.5px;
+    color: #37614e;
+    max-width: 78ch;
+    line-height: 1.6;
+}
+
+:focus-visible { outline: 1px solid var(--glow); outline-offset: 2px; }
+
+.row {
+    display: grid;
+    grid-template-columns: 22rem 5.5rem 4rem 6rem;
+    gap: 12px;
+    min-width: 38rem;
+}
+
+.rows { overflow-x: auto; }
+.row .n { color: var(--bright); }
+.row .s { color: var(--amber); text-align: right; }
+.head { color: var(--dim); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+
+@media (prefers-reduced-motion: reduce) {
+    .caret { animation: none; }
+}
+
+@media (max-width: 30rem) {
+    body { padding: 10px; font-size: 12.5px; }
+    .screen { height: 68vh; }
+}
+</style>
+
+<div class="page">
+    <div class="window">
+        <div class="titlebar">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            <span class="who">drangit — bash — 132x40</span>
+            <span class="quota">quota 4 812/5 000</span>
+        </div>
+
+        <div class="screen" id="screen">
+            <div class="out" id="out" aria-live="polite" aria-label="Sortie du terminal"></div>
+        </div>
+
+        <div class="prompt-line">
+            <label class="ps1" for="cmd">
+                <span>drangoht</span><span class="sep">@</span><span class="path" id="cwd">~/repos</span><span class="sep"> $</span>
+            </label>
+            <span class="field">
+                <input type="text" id="cmd" name="cmd" spellcheck="false" autocapitalize="off"
+                       autocomplete="off" aria-label="Ligne de commande" placeholder="tapez help et validez">
+                <span class="caret" id="caret" aria-hidden="true"></span>
+            </span>
+        </div>
+    </div>
+
+    <div class="hints">
+        <span><b>help</b> liste tout</span>
+        <span><b>Tab</b> complète</span>
+        <span><b>↑ ↓</b> historique</span>
+        <span><b>Ctrl+L</b> efface</span>
+    </div>
+
+    <div class="chips" id="chips"></div>
+
+    <p class="note">
+        Prototype de la direction « Console phosphore ». Les dépôts, les sujets et les
+        descriptions viennent du fichier éditorial du site ; les étoiles, les dates et le quota
+        sont plausibles mais inventés. Dans le site réel, les commandes de filtre seront de
+        vraies navigations (elles affichent ici l'URL qu'elles produiraient) et fonctionneront
+        sans JavaScript ; le reste est l'enrichissement côté client.
+    </p>
+</div>
+
+<script>
+(function () {
+    "use strict";
+
+    var REPOS = [
+        { n: "DrangohtsGames", l: "C#", s: 12, d: "2026-09-14", t: ["game-dev", "web", "claude-code"], demo: 1, x: "Site vitrine de mes jeux itch.io — Blazor SSR, bilingue, builds Web auto-hébergés." },
+        { n: "chimera-protocol", l: "C#", s: 6, d: "2026-08-30", t: ["game-dev", "unity"], demo: 1, x: "Survivor-like où l'on greffe sur soi des morceaux des monstres que l'on abat." },
+        { n: "money-survivor", l: "C#", s: 3, d: "2026-07-11", t: ["game-dev", "unity"], demo: 1, x: "Prototype de survivor-like, mené jusqu'à la boucle de jeu complète." },
+        { n: "SmilyVolley", l: "C#", s: 1, d: "2025-11-02", t: ["game-dev", "unity"], demo: 1, x: "Volley à deux boutons, un smiley de chaque côté du filet." },
+        { n: "snake-snack", l: "C#", s: 2, d: "2025-09-18", t: ["game-dev", "unity"], demo: 1, x: "Un serpent, des snacks, et rien d'autre." },
+        { n: "unity-game-template-with-claude", l: "C#", s: 9, d: "2026-09-02", t: ["game-dev", "unity", "tooling", "claude-code", "ai"], x: "Gabarit de projet Unity préparé pour être mené avec Claude Code." },
+        { n: "asm-gameboy-firstprog", l: "Assembly", s: 3, d: "2026-06-02", t: ["game-dev", "learning"], x: "Premiers pas en assembleur Game Boy." },
+        { n: "AdventOfCode", l: "C#", s: 4, d: "2025-12-25", t: ["katas", "algorithms"], x: "Les calendriers de l'Avent, année après année." },
+        { n: "Codingame", l: "C#", s: 2, d: "2025-04-19", t: ["katas", "algorithms"], x: "Puzzles CodinGame résolus et commentés." },
+        { n: "BankingKata", l: "C#", s: 2, d: "2026-02-07", t: ["katas", "tdd"], x: "Le kata du compte bancaire, écrit en partant des tests." },
+        { n: "SocialNetworkKata", l: "C#", s: 1, d: "2026-01-23", t: ["katas", "tdd"], x: "Le kata du réseau social, en TDD strict." },
+        { n: "GildedRosesBis", l: "C#", s: 3, d: "2025-10-30", t: ["katas", "tdd"], x: "Gilded Rose : couvrir avant de refactorer." },
+        { n: "DoItYourself", l: "C#", s: 1, d: "2025-03-12", t: ["katas"], archived: 1, x: "Exercices variés, sans fil conducteur." },
+        { n: "Algorithme-de-Huffman", l: "C#", s: 8, d: "2026-05-21", t: ["algorithms", "web"], demo: 1, x: "Le codage de Huffman, implémenté et rendu manipulable dans le navigateur." },
+        { n: "huffman-algorithm-flutter", l: "Dart", s: 2, d: "2026-03-08", t: ["algorithms", "mobile"], x: "Le même codage de Huffman, porté sur Flutter." },
+        { n: "go-training", l: "Go", s: 5, d: "2026-04-16", t: ["learning"], x: "Parcours d'entraînement Go : douze exercices guidés par les tests." },
+        { n: "rust-atelier", l: "Rust", s: 6, d: "2026-08-04", t: ["learning", "tdd"], x: "Atelier d'apprentissage Rust : workspace Cargo et exercices progressifs." },
+        { n: "rust-training", l: "Rust", s: 2, d: "2026-01-09", t: ["learning"], x: "Premiers exercices Rust, avant l'atelier." },
+        { n: "netcore_tdd_training", l: "C#", s: 3, d: "2025-08-27", t: ["learning", "tdd"], x: "Parcours TDD sur .NET, suivi de bout en bout." },
+        { n: "claude-csharp-training", l: "C#", s: 7, d: "2026-07-29", t: ["learning", "claude-code", "ai"], x: "Apprendre C# en menant la session avec un assistant." },
+        { n: "github-training", l: "Shell", s: 1, d: "2025-06-14", t: ["learning", "tooling"], x: "Manipulations Git et GitHub, refaites jusqu'à ce qu'elles soient acquises." },
+        { n: "flutter_tutorials", l: "Dart", s: 1, d: "2024-11-21", t: ["learning", "mobile"], archived: 1, x: "Tutoriels Flutter suivis pas à pas." },
+        { n: "nextjs-training", l: "TypeScript", s: 2, d: "2025-05-30", t: ["learning", "web"], x: "Next.js, du routage aux rendus serveur." },
+        { n: "vuejs-training", l: "Vue", s: 1, d: "2025-02-18", t: ["learning", "web"], x: "Vue 3, composition API et réactivité." },
+        { n: "snapface", l: "TypeScript", s: 1, d: "2024-09-05", t: ["learning", "web"], archived: 1, x: "Application Angular d'apprentissage, restée à son état de cours." },
+        { n: "eventsourcingpoc", l: "C#", s: 4, d: "2026-02-26", t: ["poc"], x: "Event sourcing : vérifier ce que coûte vraiment la reconstitution d'état." },
+        { n: "mediatrpoc", l: "C#", s: 2, d: "2025-07-08", t: ["poc"], x: "MediatR mis à l'épreuve sur un cas réel, puis remis à sa place." },
+        { n: "azureservicebuspoc", l: "C#", s: 2, d: "2025-10-12", t: ["poc", "azure", "messaging"], x: "Service Bus : files, sujets, et ce qui arrive quand un message échoue." },
+        { n: "verifyplayground", l: "C#", s: 3, d: "2026-06-19", t: ["playground", "tdd"], x: "Tests d'approbation avec Verify, sur des sorties volumineuses." },
+        { n: "local-llm-mcp", l: "Python", s: 11, d: "2026-09-02", t: ["ai", "llm", "tooling"], x: "Un serveur MCP qui confie les lectures volumineuses à un modèle local plutôt qu'au cloud." },
+        { n: "localllmwithdotnet", l: "C#", s: 5, d: "2026-05-04", t: ["ai", "llm", "poc"], x: "Piloter un modèle local depuis .NET, sans passer par le cloud." },
+        { n: "agency-multi-agent", l: "Python", s: 6, d: "2026-07-22", t: ["ai", "llm", "poc"], x: "Plusieurs agents qui se répartissent une tâche, et le coût que ça représente." },
+        { n: "apitoappgenerator", l: "TypeScript", s: 10, d: "2026-08-17", t: ["ai", "tooling", "web", "api"], demo: 1, x: "Génère une interface fonctionnelle à partir de la description d'une API." },
+        { n: "drangoht-designpatterncsharpparclaudeai", l: "C#", s: 4, d: "2026-03-29", t: ["poc", "ai", "claude-code"], x: "Le catalogue du GoF en C#, écrit de bout en bout par un assistant." }
+    ];
+
+    var out = document.getElementById("out");
+    var screen = document.getElementById("screen");
+    var input = document.getElementById("cmd");
+    var caret = document.getElementById("caret");
+    var cwdEl = document.getElementById("cwd");
+
+    var history = [];
+    var histIndex = -1;
+    var cwd = "~/repos";
+    var lastFilter = null;
+
+    var COMMANDS = [
+        "help", "ls", "ll", "find", "open", "cd", "cat", "whoami", "stats", "quota",
+        "topics", "langs", "history", "clear", "man", "eggs", "matrix", "coffee", "vim", "exit", "sudo"
+    ];
+
+    /* Les commandes qui ne servent à rien, et ce qu'on en a déjà trouvé. */
+    var EGGS = [
+        ["sudo", "sudo rm -rf /", "tentez le pire"],
+        ["matrix", "matrix", "neuf lignes de pluie verte"],
+        ["coffee", "coffee", "la seule erreur HTTP qui se boit"],
+        ["vim", "vim", "y entrer est la partie facile"],
+        ["exit", "exit", "il n'y a pas de sortie"]
+    ];
+
+    var found = {};
+
+    /* ---------- écriture ---------- */
+
+    function el(tag, cls, text) {
+        var node = document.createElement(tag);
+        if (cls) { node.className = cls; }
+        if (text !== undefined) { node.textContent = text; }
+        return node;
+    }
+
+    function write(node) {
+        out.appendChild(node);
+        screen.scrollTop = screen.scrollHeight;
+        return node;
+    }
+
+    function line(text, cls) { return write(el("p", cls, text)); }
+
+    function pre(text, cls) { return write(el("pre", cls, text)); }
+
+    function blank() { return write(el("p", "blk", " ")); }
+
+    function url(path) { return write(el("p", "url blk", path)); }
+
+    function echo(command) {
+        var p = el("p", "echo");
+        p.innerHTML = '<span class="user">drangoht</span>@<span class="path"></span> $ <span class="cmd"></span>';
+        p.querySelector(".path").textContent = cwd;
+        p.querySelector(".cmd").textContent = command;
+        return write(p);
+    }
+
+    /* ---------- données ---------- */
+
+    function fmtDate(iso) {
+        var p = iso.split("-");
+        return p[2] + "/" + p[1] + "/" + p[0];
+    }
+
+    function pad(text, width) {
+        text = String(text);
+        if (text.length > width) { return text.slice(0, width - 1) + "…"; }
+        while (text.length < width) { text += " "; }
+        return text;
+    }
+
+    function padLeft(text, width) {
+        text = String(text);
+        while (text.length < width) { text = " " + text; }
+        return text;
+    }
+
+    function allTopics() {
+        var counts = {};
+        REPOS.forEach(function (r) {
+            r.t.forEach(function (topic) { counts[topic] = (counts[topic] || 0) + 1; });
+        });
+        return Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a] || a.localeCompare(b); })
+            .map(function (k) { return { name: k, count: counts[k] }; });
+    }
+
+    function allLangs() {
+        var counts = {};
+        REPOS.forEach(function (r) { counts[r.l] = (counts[r.l] || 0) + 1; });
+        return Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a] || a.localeCompare(b); })
+            .map(function (k) { return { name: k, count: counts[k] }; });
+    }
+
+    /* Candidats à un nom partiel, du plus probable au moins probable : nom exact,
+       puis début de nom, puis n'importe où. */
+    function matchRepos(term) {
+        term = term.toLowerCase();
+        var exact = REPOS.filter(function (r) { return r.n.toLowerCase() === term; });
+        if (exact.length) { return exact; }
+        var starts = REPOS.filter(function (r) { return r.n.toLowerCase().indexOf(term) === 0; });
+        var inside = REPOS.filter(function (r) {
+            return r.n.toLowerCase().indexOf(term) > 0;
+        });
+        return starts.concat(inside);
+    }
+
+    function findRepo(term) {
+        var matches = matchRepos(term);
+        return matches.length === 1 ? matches[0] : null;
+    }
+
+    /* ---------- rendu d'une liste ---------- */
+
+    function listRepos(repos, long) {
+        if (!repos.length) {
+            line("aucun dépôt ne correspond.", "amber");
+            line("essayez « ls » pour tout revoir, ou « topics » pour les sujets disponibles.", "dim");
+            return;
+        }
+
+        var box = el("div", "rows blk");
+
+        if (long) {
+            var head = el("div", "row head");
+            head.appendChild(el("span", null, "dépôt"));
+            head.appendChild(el("span", null, "langage"));
+            head.appendChild(el("span", "s", "étoiles"));
+            head.appendChild(el("span", null, "poussé"));
+            box.appendChild(head);
+        }
+
+        repos.forEach(function (r) {
+            if (long) {
+                var row = el("div", "row");
+                var name = el("span", "n", r.n + (r.archived ? " [archivé]" : ""));
+                row.appendChild(name);
+                row.appendChild(el("span", "violet", r.l));
+                row.appendChild(el("span", "s", r.s));
+                row.appendChild(el("span", "dim", fmtDate(r.d)));
+                box.appendChild(row);
+            } else {
+                var p = el("p");
+                p.appendChild(el("span", "bright", pad(r.n, 42)));
+                p.appendChild(el("span", "dim", " " + r.x));
+                box.appendChild(p);
+            }
+        });
+
+        write(box);
+        line(repos.length + " dépôt" + (repos.length > 1 ? "s" : "") + " sur " + REPOS.length + ".", "dim");
+    }
+
+    function showRepo(r) {
+        var card = el("div", "card blk");
+        card.appendChild(el("h2", null, r.n));
+        var facts = el("p", "facts");
+        facts.textContent = r.l + " · ★ " + r.s + " · poussé le " + fmtDate(r.d)
+            + " · " + r.t.join(", ") + (r.demo ? " · démo en ligne" : "") + (r.archived ? " · archivé" : "");
+        card.appendChild(facts);
+        card.appendChild(el("p", null, r.x));
+        write(card);
+        url("/fr/repos/" + r.n.toLowerCase());
+    }
+
+    /* ---------- analyse de la ligne ---------- */
+
+    function parseFilter(tokens) {
+        var filter = { topic: null, lang: null, demo: false, active: false, q: null };
+        var matched = false;
+
+        tokens.forEach(function (token) {
+            var m;
+            if ((m = /^--topic=(.+)$/.exec(token))) { filter.topic = m[1]; matched = true; }
+            else if ((m = /^--lang=(.+)$/.exec(token))) { filter.lang = m[1]; matched = true; }
+            else if (token === "--demo") { filter.demo = true; matched = true; }
+            else if (token === "--no-archived" || token === "--active") { filter.active = true; matched = true; }
+            else if (token === "-l") { /* traité ailleurs */ }
+            else if (token.charAt(0) !== "-") { filter.q = (filter.q ? filter.q + " " : "") + token; matched = true; }
+        });
+
+        return matched ? filter : null;
+    }
+
+    function applyFilter(filter) {
+        return REPOS.filter(function (r) {
+            if (filter.topic && r.t.indexOf(filter.topic.toLowerCase()) < 0) { return false; }
+            if (filter.lang && r.l.toLowerCase() !== filter.lang.toLowerCase()) { return false; }
+            if (filter.demo && !r.demo) { return false; }
+            if (filter.active && r.archived) { return false; }
+            if (filter.q) {
+                var hay = (r.n + " " + r.x + " " + r.t.join(" ")).toLowerCase();
+                if (hay.indexOf(filter.q.toLowerCase()) < 0) { return false; }
+            }
+            return true;
+        });
+    }
+
+    function filterUrl(filter) {
+        var parts = [];
+        if (filter.q) { parts.push("q=" + encodeURIComponent(filter.q)); }
+        if (filter.topic) { parts.push("topic=" + encodeURIComponent(filter.topic)); }
+        if (filter.lang) { parts.push("lang=" + encodeURIComponent(filter.lang)); }
+        if (filter.demo) { parts.push("demo=true"); }
+        if (filter.active) { parts.push("active=true"); }
+        return "/fr/" + (parts.length ? "?" + parts.join("&") : "");
+    }
+
+    /* ---------- commandes ---------- */
+
+    var HELP = [
+        ["Filtrer — ces commandes sont de vraies navigations", [
+            ["ls", "liste les dépôts"],
+            ["ls -l", "vue détaillée : langage, étoiles, date"],
+            ["ls --topic=unity", "filtre par sujet"],
+            ["ls --lang=rust", "filtre par langage"],
+            ["ls --demo", "ceux qui ont une démo en ligne"],
+            ["ls --no-archived", "masque les dépôts archivés"],
+            ["find huffman", "recherche plein texte"]
+        ]],
+        ["Circuler", [
+            ["open huffman", "ouvre la fiche d'un dépôt"],
+            ["cd about", "va sur la page À propos"],
+            ["cd /", "retour à l'accueil"]
+        ]],
+        ["S'informer", [
+            ["whoami", "qui tient ce compte"],
+            ["stats", "dépôts, langages, étoiles"],
+            ["topics", "les sujets et leur fréquence"],
+            ["langs", "les langages et leur fréquence"],
+            ["quota", "état de l'API GitHub"],
+            ["cat README.md", "le README du dépôt ouvert"]
+        ]],
+        ["Confort", [
+            ["clear", "efface l'écran (Ctrl+L)"],
+            ["history", "les commandes tapées"],
+            ["man <commande>", "un mot de plus sur une commande"]
+        ]]
+    ];
+
+    var HANDLERS = {
+        help: function () {
+            blank();
+            HELP.forEach(function (group) {
+                line(group[0], "amber b");
+                group[1].forEach(function (row) {
+                    var p = el("p");
+                    p.appendChild(el("span", "bright", "  " + pad(row[0], 20)));
+                    p.appendChild(el("span", "dim", row[1]));
+                    write(p);
+                });
+                blank();
+            });
+            line("Il y a aussi quelques commandes qui ne servent à rien : « eggs » les liste,", "dim");
+            line("si vous préférez ne pas les chercher.", "dim");
+        },
+
+        eggs: function () {
+            var count = EGGS.filter(function (egg) { return found[egg[0]]; }).length;
+            blank();
+            line("Commandes qui ne servent à rien — " + count + " sur " + EGGS.length + " essayées", "amber b");
+            EGGS.forEach(function (egg) {
+                var hit = found[egg[0]];
+                var p = el("p");
+                p.appendChild(el("span", hit ? "glow" : "dim", hit ? "  ✓ " : "  · "));
+                p.appendChild(el("span", hit ? "bright" : null, pad(egg[1], 18)));
+                p.appendChild(el("span", "dim", egg[2]));
+                write(p);
+            });
+            if (count < EGGS.length) {
+                line("tapez-les, elles ne cassent rien.", "dim blk");
+            } else {
+                line("toutes essayées. Il n'y en a pas d'autres — enfin, presque.", "dim blk");
+            }
+        },
+
+        ls: function (tokens) {
+            var long = tokens.indexOf("-l") >= 0;
+            var filter = parseFilter(tokens);
+            if (!filter) {
+                lastFilter = null;
+                listRepos(REPOS, long);
+                url("/fr/");
+                return;
+            }
+            lastFilter = filter;
+            listRepos(applyFilter(filter), long);
+            url(filterUrl(filter));
+        },
+
+        ll: function (tokens) { HANDLERS.ls(tokens.concat(["-l"])); },
+
+        find: function (tokens) {
+            if (!tokens.length) { line("usage : find <terme>", "amber"); return; }
+            var filter = { topic: null, lang: null, demo: false, active: false, q: tokens.join(" ") };
+            listRepos(applyFilter(filter), false);
+            url(filterUrl(filter));
+        },
+
+        open: function (tokens) {
+            if (!tokens.length) { line("usage : open <dépôt>", "amber"); return; }
+            var matches = matchRepos(tokens[0]);
+            if (!matches.length) {
+                line("open: « " + tokens[0] + " » : aucun dépôt de ce nom.", "rose");
+                line("essayez « find " + tokens[0] + " » pour chercher dans les descriptions.", "dim");
+                return;
+            }
+            if (matches.length > 1) {
+                line("open: « " + tokens[0] + " » désigne " + matches.length + " dépôts :", "amber");
+                matches.forEach(function (m) { line("  " + m.n, "bright"); });
+                line("précisez le nom, ou complétez-le avec Tab.", "dim");
+                return;
+            }
+            var r = matches[0];
+            cwd = "~/repos/" + r.n;
+            cwdEl.textContent = cwd;
+            showRepo(r);
+        },
+
+        cd: function (tokens) {
+            var target = tokens[0] || "/";
+            if (target === "/" || target === "~" || target === "..") {
+                cwd = "~/repos";
+                cwdEl.textContent = cwd;
+                line("accueil — " + REPOS.length + " dépôts publics.", "dim");
+                url("/fr/");
+                return;
+            }
+            if (/^about$|^a-propos$/i.test(target)) {
+                cwd = "~/about";
+                cwdEl.textContent = cwd;
+                blank();
+                line("À propos", "bright b");
+                pre("Ce site liste les dépôts publics de github.com/drangoht.\n"
+                    + "Les données viennent de l'API GitHub au runtime, mises en cache\n"
+                    + "quinze minutes, complétées par un fichier éditorial versionné et\n"
+                    + "doublées d'un instantané sur disque quand l'API ne répond plus.", "dim");
+                url("/fr/about");
+                return;
+            }
+            var r = findRepo(target);
+            if (r) { HANDLERS.open([target]); return; }
+            line("cd: " + target + ": aucun dossier de ce nom.", "rose");
+        },
+
+        cat: function (tokens) {
+            var name = tokens[0] || "";
+            if (!/readme/i.test(name)) {
+                line("cat: " + (name || "?") + ": fichier introuvable.", "rose");
+                line("seul « cat README.md » est servi ici.", "dim");
+                return;
+            }
+            var slug = cwd.indexOf("~/repos/") === 0 ? cwd.slice(8) : null;
+            if (!slug) {
+                line("cat: aucun dépôt ouvert. Faites « open <dépôt> » d'abord.", "amber");
+                return;
+            }
+            var r = findRepo(slug);
+            blank();
+            pre("# " + r.n + "\n\n" + r.x + "\n\n"
+                + "## Sujets\n" + r.t.map(function (t) { return "- " + t; }).join("\n") + "\n\n"
+                + "## État\n- langage principal : " + r.l + "\n- étoiles : " + r.s
+                + "\n- dernier push : " + fmtDate(r.d)
+                + (r.demo ? "\n- démo en ligne : oui" : "")
+                + (r.archived ? "\n- dépôt archivé" : ""), "dim wrapped");
+        },
+
+        whoami: function () {
+            blank();
+            line("drangoht", "bright b");
+            pre("Développeur .NET. " + REPOS.length + " dépôts publics, dont la moitié sont\n"
+                + "des terrains d'entraînement — et c'est délibéré : un kata refait trois\n"
+                + "fois vaut mieux qu'un projet abandonné deux fois.\n\n"
+                + "github.com/drangoht", "dim wrapped");
+        },
+
+        stats: function () {
+            var stars = REPOS.reduce(function (sum, r) { return sum + r.s; }, 0);
+            var demos = REPOS.filter(function (r) { return r.demo; }).length;
+            var archived = REPOS.filter(function (r) { return r.archived; }).length;
+            var langs = allLangs();
+            blank();
+            pre("dépôts publics ....... " + REPOS.length + "\n"
+                + "langages ............. " + langs.length + "  (" + langs.slice(0, 4).map(function (l) { return l.name; }).join(", ") + "…)\n"
+                + "étoiles cumulées ..... " + stars + "\n"
+                + "avec démo en ligne ... " + demos + "\n"
+                + "archivés ............. " + archived + "\n"
+                + "dernier push ......... " + fmtDate(REPOS.slice().sort(function (a, b) { return a.d < b.d ? 1 : -1; })[0].d), "dim");
+        },
+
+        topics: function () {
+            blank();
+            var box = el("div", "rows");
+            allTopics().forEach(function (t) {
+                var p = el("p");
+                p.appendChild(el("span", "bright", "  " + pad(t.name, 16)));
+                p.appendChild(el("span", "dim", padLeft(t.count, 3) + " dépôts"));
+                box.appendChild(p);
+            });
+            write(box);
+            line("filtrez avec « ls --topic=<sujet> ».", "dim blk");
+        },
+
+        langs: function () {
+            blank();
+            var box = el("div", "rows");
+            allLangs().forEach(function (l) {
+                var p = el("p");
+                p.appendChild(el("span", "violet", "  " + pad(l.name, 16)));
+                p.appendChild(el("span", "dim", padLeft(l.count, 3) + " dépôts"));
+                box.appendChild(p);
+            });
+            write(box);
+            line("filtrez avec « ls --lang=<langage> ».", "dim blk");
+        },
+
+        quota: function () {
+            blank();
+            pre("GET https://api.github.com/users/drangoht/repos\n"
+                + "x-ratelimit-limit ....... 5000\n"
+                + "x-ratelimit-remaining ... 4812\n"
+                + "x-ratelimit-reset ....... 15:02 (dans 41 min)\n"
+                + "cache ................... 15 min · dernier appel il y a 4 min\n\n"
+                + "Sans jeton, GitHub accorde 60 requêtes par heure. Le cache en\n"
+                + "consomme quatre par heure : le site fonctionne sans secret.", "dim wrapped");
+        },
+
+        history: function () {
+            blank();
+            if (!history.length) { line("aucune commande pour l'instant.", "dim"); return; }
+            history.forEach(function (h, i) {
+                line("  " + padLeft(i + 1, 3) + "  " + h, "dim");
+            });
+        },
+
+        man: function (tokens) {
+            var name = tokens[0];
+            if (!name) { line("usage : man <commande>", "amber"); return; }
+            var pages = {
+                ls: "ls — liste les dépôts. Accepte --topic=, --lang=, --demo, --no-archived et -l.\nChaque appel correspond à une URL du site : la même page, partageable.",
+                open: "open — ouvre la fiche d'un dépôt. Le nom peut être partiel tant qu'il ne désigne qu'un seul dépôt.",
+                find: "find — recherche dans les noms, les descriptions et les sujets.",
+                cat: "cat — n'accepte que README.md, et seulement quand un dépôt est ouvert.",
+                sudo: "sudo — vous n'êtes pas dans le fichier sudoers. Cet incident sera signalé.",
+                man: "man — vous y êtes."
+            };
+            blank();
+            pre(pages[name] || ("Pas de page de manuel pour « " + name + " »."), "dim wrapped");
+        },
+
+        clear: function () { out.innerHTML = ""; },
+
+        /* --- le reste ne sert à rien, et c'est voulu --- */
+
+        sudo: function (tokens) {
+            var rest = tokens.join(" ");
+            if (/rm\s+-rf\s+\//.test(rest)) {
+                line("suppression de /fr/repos … ", "rose");
+                line("suppression de /fr/about … ", "rose");
+                line("suppression de wwwroot/app.css … ", "rose");
+                blank();
+                line("… non. C'est un site statique : il repousse au prochain build.", "amber");
+                return;
+            }
+            line("drangoht n'est pas dans le fichier sudoers. Cet incident sera signalé.", "rose");
+        },
+
+        matrix: function () {
+            var glyphes = "アイウエオカキクケコサシスセソタチツテト01001101";
+            var lines = [];
+            for (var i = 0; i < 9; i++) {
+                var row = "";
+                for (var j = 0; j < 58; j++) {
+                    row += Math.random() < .22 ? " " : glyphes.charAt(Math.floor(Math.random() * glyphes.length));
+                }
+                lines.push(row);
+            }
+            blank();
+            pre(lines.join("\n"), "dim");
+            line("Réveille-toi, Neo. Tu as " + REPOS.length + " dépôts à maintenir.", "bright");
+        },
+
+        coffee: function () {
+            blank();
+            pre("      ( (\n"
+                + "       ) )\n"
+                + "    ..........\n"
+                + "    |        |]\n"
+                + "    \\        /\n"
+                + "     `------'", "amber");
+            line("HTTP 418 — I'm a teapot.", "dim");
+        },
+
+        vim: function () {
+            line("Vim ouvert. Pour quitter : redémarrez votre vie.", "amber");
+            line("(ou tapez « clear », c'est plus rapide)", "dim");
+        },
+
+        exit: function () {
+            line("Cette console n'a pas de sortie. Le site, si : fermez l'onglet.", "dim");
+        }
+    };
+
+    var ALIASES = {
+        "l": "ls", "dir": "ls", "quit": "exit", "logout": "exit", "?": "help", "cls": "clear",
+        "fun": "eggs", "secrets": "eggs", "easter": "eggs"
+    };
+
+    function suggest(name) {
+        var best = null;
+        var bestScore = 99;
+        COMMANDS.forEach(function (c) {
+            var score = Math.abs(c.length - name.length);
+            if (c.charAt(0) === name.charAt(0)) { score -= 2; }
+            if (c.indexOf(name.slice(0, 2)) === 0) { score -= 2; }
+            if (score < bestScore) { bestScore = score; best = c; }
+        });
+        return bestScore <= 1 ? best : null;
+    }
+
+    function run(raw) {
+        var command = raw.trim();
+        if (!command) { echo(""); return; }
+
+        echo(command);
+        history.push(command);
+        histIndex = history.length;
+
+        var tokens = command.split(/\s+/);
+        var name = tokens.shift().toLowerCase();
+        name = ALIASES[name] || name;
+
+        if (HANDLERS[name]) {
+            found[name] = true;
+            HANDLERS[name](tokens);
+            return;
+        }
+
+        /* Un mot seul qui n'est pas une commande : on le prend pour une recherche,
+           comme le champ de recherche du site. */
+        if (!tokens.length && /^[\w.\-]+$/.test(name)) {
+            var r = findRepo(name);
+            if (r) { HANDLERS.open([name]); return; }
+            var hits = applyFilter({ q: name, topic: null, lang: null, demo: false, active: false });
+            if (hits.length) {
+                line("« " + name + " » n'est pas une commande — cherché dans le catalogue :", "dim");
+                listRepos(hits, false);
+                url(filterUrl({ q: name, topic: null, lang: null, demo: false, active: false }));
+                return;
+            }
+        }
+
+        line(name + ": commande inconnue.", "rose");
+        var guess = suggest(name);
+        if (guess) { line("vouliez-vous dire « " + guess + " » ?", "dim"); }
+        else { line("tapez « help » pour la liste.", "dim"); }
+    }
+
+    /* ---------- complétion ---------- */
+
+    function complete() {
+        var value = input.value;
+        var parts = value.split(/\s+/);
+        var word = parts[parts.length - 1];
+        if (!word) { return; }
+
+        var pool;
+        if (parts.length === 1) {
+            pool = COMMANDS;
+        } else if (word.indexOf("--topic=") === 0) {
+            pool = allTopics().map(function (t) { return "--topic=" + t.name; });
+        } else if (word.indexOf("--lang=") === 0) {
+            pool = allLangs().map(function (l) { return "--lang=" + l.name.toLowerCase(); });
+        } else if (word.charAt(0) === "-") {
+            pool = ["--topic=", "--lang=", "--demo", "--no-archived", "-l"];
+        } else {
+            pool = REPOS.map(function (r) { return r.n; });
+        }
+
+        var matches = pool.filter(function (c) { return c.toLowerCase().indexOf(word.toLowerCase()) === 0; });
+        if (!matches.length) { return; }
+
+        if (matches.length === 1) {
+            parts[parts.length - 1] = matches[0];
+            input.value = parts.join(" ");
+            placeCaret();
+            return;
+        }
+
+        echo(value);
+        var box = el("p", "dim blk");
+        box.textContent = matches.slice(0, 14).join("   ") + (matches.length > 14 ? "   …" : "");
+        write(box);
+    }
+
+    /* ---------- curseur ---------- */
+
+    var mirror = document.createElement("span");
+    mirror.style.cssText = "position:absolute;visibility:hidden;white-space:pre;font:inherit";
+    document.body.appendChild(mirror);
+
+    function placeCaret() {
+        mirror.textContent = input.value;
+        var width = Math.min(mirror.offsetWidth, input.offsetWidth - 8);
+        caret.style.left = width + "px";
+    }
+
+    /* ---------- événements ---------- */
+
+    /* Cette maquette n'a pas de <form> : elle est autonome, il n'y a rien à soumettre.
+       Dans le site, le prompt en sera un — method="get", comme les filtres (ADR-0008). */
+    function submitLine(value) {
+        run(value);
+        input.value = "";
+        placeCaret();
+    }
+
+    input.addEventListener("input", placeCaret);
+
+    input.addEventListener("keydown", function (event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            submitLine(input.value);
+        } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            if (histIndex > 0) { histIndex--; input.value = history[histIndex]; placeCaret(); }
+        } else if (event.key === "ArrowDown") {
+            event.preventDefault();
+            if (histIndex < history.length - 1) { histIndex++; input.value = history[histIndex]; }
+            else { histIndex = history.length; input.value = ""; }
+            placeCaret();
+        } else if (event.key === "Tab") {
+            event.preventDefault();
+            complete();
+        } else if (event.key === "l" && event.ctrlKey) {
+            event.preventDefault();
+            HANDLERS.clear();
+        }
+    });
+
+    screen.addEventListener("mouseup", function () {
+        if (!String(window.getSelection())) { input.focus(); }
+    });
+
+    document.getElementById("chips").addEventListener("click", function (event) {
+        var button = event.target.closest(".chip");
+        if (!button) { return; }
+        input.focus();
+        submitLine(button.dataset.cmd);
+    });
+
+    ["help", "ls -l", "ls --topic=unity", "find huffman", "open huffman", "stats", "whoami", "quota", "topics", "eggs", "sudo rm -rf /"]
+        .forEach(function (cmd) {
+            var button = el("button", "chip", cmd);
+            button.type = "button";
+            button.dataset.cmd = cmd;
+            document.getElementById("chips").appendChild(button);
+        });
+
+    /* ---------- écran d'accueil ---------- */
+
+    pre(
+        " ██████╗ ██████╗  █████╗ ███╗   ██╗ ██████╗ ██╗████████╗\n"
+        + " ██╔══██╗██╔══██╗██╔══██╗████╗  ██║██╔════╝ ██║╚══██╔══╝\n"
+        + " ██║  ██║██████╔╝███████║██╔██╗ ██║██║  ███╗██║   ██║\n"
+        + " ██║  ██║██╔══██╗██╔══██║██║╚██╗██║██║   ██║██║   ██║\n"
+        + " ██████╔╝██║  ██║██║  ██║██║ ╚████║╚██████╔╝██║   ██║\n"
+        + " ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═══╝ ╚═════╝ ╚═╝   ╚═╝", "banner blk");
+
+    line("les dépôts publics de github.com/drangoht — " + REPOS.length + " dépôts, "
+        + allLangs().length + " langages", "dim");
+    line("API GitHub · cache 15 min · dernier appel il y a 4 min", "dim");
+    blank();
+    line("tapez « help » pour la liste des commandes, ou cliquez un exemple sous la fenêtre.", "amber");
+    blank();
+
+    HANDLERS.ls(["-l", "--demo"]);
+
+    input.focus();
+    placeCaret();
+}());
+</script>
+</body>
+</html>
