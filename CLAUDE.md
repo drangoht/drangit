@@ -109,6 +109,15 @@ docker compose up -d          # lit .env (voir .env.example)
   Le critère n'est pas la quantité de JavaScript, c'est ce qui disparaît quand il est absent —
   si c'est une fonction du site, le script est au mauvais endroit. Il ne connaît donc aucune
   règle métier : il présente et il navigue.
+- **Le prompt a deux moitiés, et une seule connaît le vocabulaire.** `RepositoryCommand.Parse`
+  (serveur, testé) traduit une ligne en filtre, en fiche ou en page ; `wwwroot/console.js`
+  n'intercepte **que** les commandes dont la page contient déjà la sortie, et laisse partir
+  tout le reste. **Ajouter une commande d'information, c'est ajouter un `<div data-output="…">`
+  dans `Home.razor`** — le script n'a pas à le savoir, et le texte reste dans les `.resx`.
+  Ajouter une commande qui filtre ou qui navigue, c'est un cas dans le parseur, avec son test.
+- **`console.js` n'est couvert par aucun test** (ADR 0008) : toute retouche se vérifie dans le
+  navigateur — `help`, `stats`, `eggs`, la complétion `Tab`, l'historique, et surtout qu'une
+  commande de filtre **n'est pas** interceptée.
 
 ## Réflexes attendus
 

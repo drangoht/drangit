@@ -440,6 +440,108 @@ code {
     margin-top: 2.5rem;
 }
 
+/* La sortie empilée par le prompt, quand le script est là pour la produire. Sans lui, ce
+   bloc reste vide et la page se comporte comme avant (ADR 0008). */
+.cli__log {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin-top: 2.5rem;
+}
+
+.cli__log:empty {
+    display: none;
+}
+
+.cli__log pre {
+    margin: 0;
+    overflow-x: auto;
+    font: inherit;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
+/* La commande rappelée au-dessus de sa sortie : c'est ce qui rend la suite lisible quand
+   plusieurs réponses se sont empilées. */
+.cli__echo {
+    margin: 0.9rem 0 0.1rem;
+    color: var(--accent);
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+}
+
+.cli__output {
+    color: var(--text);
+    font-size: 0.9rem;
+}
+
+.cli__hint {
+    color: var(--warning) !important;
+}
+
+.cli__rain {
+    color: color-mix(in srgb, var(--accent) 55%, transparent) !important;
+    line-height: 1.25 !important;
+}
+
+/* Les listes chiffrées — statistiques, sujets, langages : deux colonnes qui s'alignent,
+   comme la sortie d'un programme qui compte. */
+.cli__stats,
+.cli__eggs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.1rem;
+    font-size: 0.9rem;
+}
+
+.cli__stats li {
+    display: grid;
+    grid-template-columns: minmax(0, 18rem) auto;
+    gap: 1rem;
+    color: var(--text-muted);
+}
+
+.cli__stats li span {
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}
+
+.cli__eggs li {
+    color: var(--text-muted);
+}
+
+.cli__eggs li::before {
+    content: "· ";
+    color: var(--text-muted);
+}
+
+/* Ce qu'on a déjà essayé, et ce qui reste à trouver. Le sélecteur porte la classe de la
+   liste : sans elle, la puce de `.cli__eggs li::before` l'emporterait et la coche ne
+   s'afficherait jamais. */
+.cli__eggs li.cli__egg--found {
+    color: var(--text);
+}
+
+.cli__eggs li.cli__egg--found::before {
+    content: "✓ ";
+    color: var(--accent);
+}
+
+.cli__eggs li span {
+    color: var(--text-muted);
+}
+
+[data-found]::after {
+    content: attr(data-found);
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.85em;
+}
+
 /* Le prompt saisissable, en bas de page. Un champ sans cadre ni fond : ce qui se voit,
    c'est l'invite et le texte tapé, comme dans un terminal. Le bouton d'envoi est là mais
    masqué — la touche Entrée suffit, et un bouton « Appliquer » casserait l'illusion sans

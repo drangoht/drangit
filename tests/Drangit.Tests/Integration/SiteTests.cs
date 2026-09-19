@@ -152,6 +152,39 @@ public sealed class SiteTests : IClassFixture<SiteFactoryFixture>
     }
 
     [Fact]
+    public async Task Accueil_FournitLesSortiesDuPromptDejaRedigees()
+    {
+        var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
+
+        // Le script client ne connaît aucun texte ni aucune règle (ADR 0008) : le serveur
+        // rend ces blocs, traduits et chiffrés, et le script ne fait que les montrer.
+        html.ShouldContain("data-output=\"help\"");
+        html.ShouldContain("data-output=\"whoami\"");
+        html.ShouldContain("data-output=\"stats\"");
+        html.ShouldContain("data-output=\"topics\"");
+    }
+
+    [Fact]
+    public async Task Accueil_LesSortiesDuPromptSontMasqueesTantQuOnNeLesDemandePas()
+    {
+        var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
+
+        // Sans JavaScript, elles ne doivent pas s'ajouter au bas de la page.
+        html.ShouldContain("class=\"cli__outputs\" hidden");
+    }
+
+    [Fact]
+    public async Task Accueil_LaSortieStats_CompteLesDepotsDuCatalogue()
+    {
+        var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
+
+        // Le jeu de test compte deux dépôts, dont un archivé et un avec démonstration.
+        html.ShouldContain("<span data-stat=\"repositories\">2</span>");
+        html.ShouldContain("<span data-stat=\"archived\">1</span>");
+        html.ShouldContain("<span data-stat=\"demos\">1</span>");
+    }
+
+    [Fact]
     public async Task Accueil_NAfficheAucuneImage()
     {
         var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);

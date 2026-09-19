@@ -22,6 +22,9 @@
 <body>
     <Routes />
     <script src="@Assets["_framework/blazor.web.js"]"></script>
+    @* Enrichissement du prompt de l'accueil (ADR 0008). Chargé partout, il ne fait rien là où
+       il n'y a pas de prompt, et son absence ne retire aucune fonction au site. *@
+    <script src="@Assets["console.js"]" defer></script>
 </body>
 
 </html>

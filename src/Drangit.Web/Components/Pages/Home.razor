@@ -165,6 +165,70 @@ else
         </ul>
     }
 
+    @* Les sorties que le prompt sait afficher sans recharger la page. Elles sont rendues ici,
+       traduites et déjà chiffrées : le script client ne connaît ni texte ni règle, il ne fait
+       que recopier le bloc demandé (ADR 0008). Ajouter une commande, c'est ajouter un bloc —
+       le script n'a pas à le savoir. Sans JavaScript, rien de tout ceci ne s'affiche, et rien
+       n'est perdu : ce sont des commodités, pas des fonctions du site. *@
+    <div class="cli__outputs" hidden>
+        <div data-output="help">
+            <pre>@T["Prompt.Help"]</pre>
+        </div>
+
+        <div data-output="whoami">
+            <pre>@T["Prompt.WhoAmI"]</pre>
+        </div>
+
+        <div data-output="stats">
+            <ul class="cli__stats">
+                <li>@T["Prompt.Stats.Repositories"] <span data-stat="repositories">@_allRepositories.Count</span></li>
+                <li>@T["Prompt.Stats.Languages"] <span data-stat="languages">@_availableLanguages.Count</span></li>
+                <li>@T["Prompt.Stats.Stars"] <span data-stat="stars">@_allRepositories.Sum(repository => repository.Stars)</span></li>
+                <li>@T["Prompt.Stats.Demos"] <span data-stat="demos">@_demoCount</span></li>
+                <li>@T["Prompt.Stats.Archived"] <span data-stat="archived">@_archivedCount</span></li>
+            </ul>
+        </div>
+
+        <div data-output="topics">
+            <ul class="cli__stats">
+                @foreach (var topic in _availableTopics)
+                {
+                    <li>@topic.Value <span>@topic.Count</span></li>
+                }
+            </ul>
+        </div>
+
+        <div data-output="langs">
+            <ul class="cli__stats">
+                @foreach (var language in _availableLanguages)
+                {
+                    <li>@language.Value <span>@language.Count</span></li>
+                }
+            </ul>
+        </div>
+
+        <div data-output="cache">
+            <pre>@T["Prompt.Cache"]</pre>
+        </div>
+
+        @* Ce qui suit ne sert à rien, et c'est voulu. *@
+        <div data-output="eggs">
+            <ul class="cli__eggs">
+                <li data-egg="sudo">sudo rm -rf / <span>@T["Prompt.Eggs.Sudo"]</span></li>
+                <li data-egg="matrix">matrix <span>@T["Prompt.Eggs.Matrix"]</span></li>
+                <li data-egg="coffee">coffee <span>@T["Prompt.Eggs.Coffee"]</span></li>
+                <li data-egg="vim">vim <span>@T["Prompt.Eggs.Vim"]</span></li>
+                <li data-egg="exit">exit <span>@T["Prompt.Eggs.Exit"]</span></li>
+            </ul>
+        </div>
+
+        <div data-output="sudo"><pre>@T["Prompt.Sudo"]</pre></div>
+        <div data-output="matrix" data-effect="rain"><pre>@T["Prompt.Matrix"]</pre></div>
+        <div data-output="coffee"><pre>@T["Prompt.Coffee"]</pre></div>
+        <div data-output="vim"><pre>@T["Prompt.Vim"]</pre></div>
+        <div data-output="exit"><pre>@T["Prompt.Exit"]</pre></div>
+    </div>
+
     @* Le prompt est un vrai formulaire GET : il fonctionne sans JavaScript, et une commande
        y mène à la même adresse qu'un clic sur le critère correspondant (ADR 0008). *@
     <form method="get" class="cli__form" role="search">

@@ -212,4 +212,105 @@
   <data name="Error.RequestId" xml:space="preserve">
     <value>Request ID: {0}</value>
   </data>
+  <data name="Prompt.Help" xml:space="preserve">
+    <value>Filter — these commands are real navigations
+  ls                   list the repositories
+  ls --topic=unity     filter by topic
+  ls --lang=rust       filter by language
+  ls --demo            those with a live demo
+  ls --no-archived     hide archived repositories
+  find &lt;term&gt;          search names and descriptions
+
+Move around
+  open &lt;repository&gt;    open a repository page
+  cd about             go to the About page
+  cd /                 back to the list
+
+Find out
+  whoami               who owns these repositories
+  stats                repositories, languages, stars
+  topics               topics and how often they appear
+  langs                languages and how often they appear
+  cache                where the data comes from
+
+Comfort
+  clear                clear the screen (Ctrl+L)
+  history              commands typed so far
+  ↑ ↓                  recall a command
+  Tab                  complete a command, a topic, a repository
+
+A few commands are of no use whatsoever: "eggs" lists them.</value>
+  </data>
+  <data name="Prompt.WhoAmI" xml:space="preserve">
+    <value>drangoht — github.com/drangoht
+
+This site lists the account's public repositories. It is written in .NET,
+server-rendered, bilingual, and deployed in a container. Its own repository
+is in the list.</value>
+  </data>
+  <data name="Prompt.Cache" xml:space="preserve">
+    <value>The catalogue comes from the GitHub API, then from a cache while it holds.
+An on-disk copy takes over when the API stops answering: the site keeps
+serving the last known list rather than an empty page.
+
+No token is required. Without one, GitHub grants sixty requests per hour —
+far more than the cache consumes.</value>
+  </data>
+  <data name="Prompt.Eggs.Sudo" xml:space="preserve">
+    <value>try the worst</value>
+  </data>
+  <data name="Prompt.Eggs.Matrix" xml:space="preserve">
+    <value>the falling glyphs</value>
+  </data>
+  <data name="Prompt.Eggs.Coffee" xml:space="preserve">
+    <value>the only HTTP error you can drink</value>
+  </data>
+  <data name="Prompt.Eggs.Vim" xml:space="preserve">
+    <value>getting in is the easy part</value>
+  </data>
+  <data name="Prompt.Eggs.Exit" xml:space="preserve">
+    <value>there is no way out</value>
+  </data>
+  <data name="Prompt.Sudo" xml:space="preserve">
+    <value>removing /en/repos …
+removing /en/about …
+removing wwwroot/app.css …
+
+… no. This is a static site: it grows back on the next build.</value>
+  </data>
+  <data name="Prompt.Matrix" xml:space="preserve">
+    <value>Wake up, Neo. You have repositories to maintain.</value>
+  </data>
+  <data name="Prompt.Coffee" xml:space="preserve">
+    <value>      ( (
+       ) )
+    ..........
+    |        |]
+    \        /
+     `------'
+
+HTTP 418 — I'm a teapot.</value>
+  </data>
+  <data name="Prompt.Vim" xml:space="preserve">
+    <value>Vim is open. To quit: restart your life.
+(or type "clear", it is faster)</value>
+  </data>
+  <data name="Prompt.Exit" xml:space="preserve">
+    <value>This console has no exit. The site does: close the tab.</value>
+  </data>
+  <data name="Prompt.Stats.Repositories" xml:space="preserve">
+    <value>public repositories</value>
+  </data>
+  <data name="Prompt.Stats.Languages" xml:space="preserve">
+    <value>languages</value>
+  </data>
+  <data name="Prompt.Stats.Stars" xml:space="preserve">
+    <value>stars in total</value>
+  </data>
+  <data name="Prompt.Stats.Demos" xml:space="preserve">
+    <value>with a live demo</value>
+  </data>
+  <data name="Prompt.Stats.Archived" xml:space="preserve">
+    <value>archived</value>
+  </data>
 </root>
