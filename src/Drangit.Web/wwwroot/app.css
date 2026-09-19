@@ -557,45 +557,73 @@ code {
 
 /* --- Illustration d'un dépôt ---------------------------------------------- */
 
-/* La tuile imite la carte de GitHub : même fond très clair, même titre en haut à gauche.
-   Elle sert de repli quand l'image n'arrive pas — et un repli n'a d'intérêt que s'il ne
-   se remarque pas. Une tuile sombre au milieu de quarante-cinq blanches se verrait. */
+/* La vignette est dessinée, pas chargée : la teinte vient du langage, l'inclinaison du
+   dégradé du nom — sans quoi deux dépôts du même langage auraient la même image. Elle se lit
+   comme une ligne de terminal, et la trame de balayage lui donne le grain d'un écran sans
+   rien masquer. Ces deux couches de fond tiennent lieu de pseudo-élément : la vitrine en a
+   déjà un, et un élément n'a qu'un ::after. */
 .cover {
     position: relative;
     aspect-ratio: 2 / 1;
     overflow: hidden;
-    padding: 8% 7% 0;
-    background: #f6f8fa;
+    /* En flux, et non le langage calé en absolu : un nom de dépôt à rallonge passait par
+       -dessus la pastille dès que la tuile se resserre — sur la fiche, par exemple. */
+    display: flex;
+    flex-direction: column;
+    /* En rem, et non en pourcentage : un padding en % se calcule sur la largeur du bloc
+       conteneur et non sur celle de la tuile — sur la fiche, il valait 78 px dans une tuile
+       de 350, et ne laissait plus de place au titre. */
+    padding: 0.9rem 1rem;
+    font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            rgba(0, 0, 0, 0.16) 0 1px,
+            transparent 1px 3px
+        ),
+        linear-gradient(
+            var(--cover-angle, 45deg),
+            color-mix(in srgb, var(--cover-accent, var(--accent)) 34%, var(--bg-elevated)) 0%,
+            var(--bg) 58%
+        );
 }
 
 .cover__title {
     margin: 0;
-    /* Calé sur la taille qu'a le titre dans la carte de GitHub à cette largeur de tuile :
-       un repli qui écrirait plus petit se repérerait au premier coup d'œil. */
-    font-size: clamp(0.95rem, 0.5rem + 1.6vw, 1.35rem);
-    font-weight: 700;
-    line-height: 1.3;
-    letter-spacing: -0.01em;
-    color: #1f2328;
-    /* Les noms de dépôts sont longs et sans espaces, comme sur la carte qu'on imite. */
+    font-size: clamp(0.8rem, 0.45rem + 1.25vw, 1.05rem);
+    font-weight: 600;
+    line-height: 1.35;
+    color: var(--text);
+    /* Les noms de dépôts sont longs et sans espaces : sans cela, un nom déborde la tuile.
+       Au-delà de trois lignes il est coupé — la carte l'écrit en entier juste en dessous.
+       Une hauteur maximale plutôt que `line-clamp` : le clamp exige un display que le
+       conteneur flex remplace, et le titre se retrouve alors réduit à rien. */
     overflow-wrap: anywhere;
+    flex: none;
+    max-height: 4.05em;
+    overflow: hidden;
+}
+
+/* Le prompt : il annonce qu'on lit une ligne de terminal, avant même de lire le nom.
+   Il prend la teinte écrite du langage, et non celle du fond : les plus sombres — le bleu
+   nuit de PowerShell, celui de Lua — disparaîtraient ici. */
+.cover__title::before {
+    content: "$ ";
+    color: var(--cover-ink, var(--accent));
 }
 
 .cover__owner {
-    font-weight: 400;
-    color: #57606a;
+    color: var(--text-muted);
 }
 
 .cover__language {
-    position: absolute;
-    left: 7%;
-    bottom: 8%;
+    margin-top: auto;
+    padding-top: 0.4rem;
     font-size: 0.7rem;
-    font-weight: 600;
-    color: #57606a;
+    color: var(--text-muted);
 }
 
-/* La pastille de langage : la seule chose que le repli dit de plus que la carte. */
+/* La pastille de langage, à la convention de GitHub : la teinte dit le langage avant le mot. */
 .cover__language::before {
     content: "";
     display: inline-block;
@@ -603,30 +631,17 @@ code {
     height: 0.55rem;
     margin-right: 0.35rem;
     border-radius: 50%;
-    background: var(--cover-accent, var(--accent));
+    background: var(--cover-ink, var(--accent));
 }
 
-/* Posée par-dessus le repli, qu'elle recouvre entièrement quand elle arrive. Si elle
-   n'arrive pas, `onerror` la retire et le repli reste visible. */
+/* Posée par-dessus la vignette, qu'elle recouvre entièrement quand elle arrive. Si elle
+   n'arrive pas, `onerror` la retire et la vignette dessinée reste visible. */
 .cover__image {
     position: absolute;
     inset: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
-}
-
-/* La carte de GitHub incruste l'avatar du compte en haut à droite, et aligne ses compteurs
-   en bas. Affichée telle quelle sur quarante-cinq vignettes, elle placarde le même visage
-   partout ; recadrée au centre, elle tranche la ligne des compteurs en deux.
-   On l'élargit donc de 39 % et on la cale en haut à gauche : le cadre, qui masque ce qui
-   dépasse, écarte la bande de droite — l'avatar y occupe de 76,7 % à 93,2 % de la largeur,
-   la colonne de titre s'arrêtant, elle, à 68 % au plus — et le bas de la carte, où
-   commencent les compteurs vers 72 % de la hauteur. Ces mesures viennent des cartes réelles :
-   toute retouche se vérifie à l'œil, en recadrant une carte, pas au calcul. */
-.cover__image--framed {
-    width: 139%;
-    object-position: left top;
 }
 
 /* Variante vitrine : une bande derrière le texte, et non une tuile. Elle reprend la teinte

@@ -45,79 +45,56 @@ public sealed class SiteTests : IClassFixture<SiteFactoryFixture>
     }
 
     [Fact]
-    public async Task Accueil_AfficheLaVignetteQueGitHubProduitPourChaqueDepot()
+    public async Task Accueil_NAfficheJamaisLaCarteDeGitHub()
     {
         var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
 
-        // C'est l'illustration attendue d'une carte. La couverture dessinée est un repli
-        // pour les images qui ne répondent pas, pas un remplacement.
-        html.ShouldContain("https://opengraph.githubassets.com/1/drangoht/ASM-Gameboy-FirstProg");
+        // La carte que produit GitHub réécrit le nom, la description et les compteurs, tous
+        // affichés juste en dessous. Quarante-cinq d'entre elles font un mur de rectangles
+        // clairs identiques, et chacune coûte une requête vers un tiers. La vignette est
+        // donc dessinée ici, à partir du langage et du nom.
+        html.ShouldNotContain("opengraph.githubassets.com");
     }
 
     [Fact]
-    public async Task Accueil_QuandUneCaptureEstDeclaree_ElleRemplaceLaVignetteDeGitHub()
+    public async Task Accueil_QuandUneCaptureEstDeclaree_ElleSAfficheParDessusLaVignette()
     {
         var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
 
+        // Une capture du fichier éditorial montre le projet lui-même : elle, elle vaut
+        // la place qu'elle prend.
         html.ShouldContain("https://exemple.test/huffman.png");
-    }
-
-    [Fact]
-    public async Task Accueil_DessineUnRepliSousChaqueVignette()
-    {
-        var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
-
-        // Sans lui, une image qui n'arrive pas laisse un trou dans la grille.
-        html.ShouldContain("--cover-accent:");
         html.ShouldContain("onerror=\"this.remove()\"");
     }
 
     [Fact]
-    public async Task Accueil_LeRepliReprendLaFactureDeLaCarteDeGitHub()
+    public async Task Accueil_DessineUneVignettePourChaqueDepot()
     {
         var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
 
-        // Le repli n'a d'intérêt que s'il ne se remarque pas : il porte le même titre
-        // « compte/dépôt » que la carte qu'il remplace. Une tuile d'une autre facture au
-        // milieu de quarante-cinq se verrait plus qu'une image manquante.
+        // Sans elle, un dépôt sans capture laisserait un trou dans la grille.
+        html.ShouldContain("--cover-accent:");
+    }
+
+    [Fact]
+    public async Task Accueil_LaVignetteEcritLeNomCompletDuDepot()
+    {
+        var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
+
+        // Le compte en gris, le dépôt en clair : c'est ce qui distingue une vignette d'une
+        // autre au premier coup d'œil, avant même la teinte du langage.
         html.ShouldContain("<span class=\"cover__owner\">drangoht/</span>ASM-Gameboy-FirstProg");
     }
 
     [Fact]
-    public async Task Accueil_RecadreLaCarteDeGitHubPourEnEcarterLAvatarDuCompte()
+    public async Task Vitrine_AfficheLaCaptureDuFichierEditorial()
     {
-        var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
-
-        // La carte incruste l'avatar en haut à droite : sans ce recadrage, le même visage
-        // s'affiche sur toutes les vignettes du catalogue.
-        html.ShouldContain("cover__image cover__image--framed");
-    }
-
-    [Fact]
-    public async Task Accueil_NeRecadrePasUneCaptureDeclareeDansLeFichierEditorial()
-    {
-        var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
-
-        // Le recadrage est taillé pour la maquette de GitHub ; l'appliquer à une capture
-        // rédigée par nous en amputerait le quart droit sans raison.
-        var capture = html.IndexOf("https://exemple.test/huffman.png", StringComparison.Ordinal);
-        capture.ShouldBeGreaterThan(-1);
-        html[..capture].ShouldNotEndWith("cover__image--framed\" src=\"");
-    }
-
-    [Fact]
-    public async Task Vitrine_NAffichePasLaCarteDeGitHub()
-    {
-        // La bande de la vitrine est bien plus large que haute : le recadrage qui écarte
-        // l'avatar y couperait le titre de la carte en deux. Elle montre donc la capture
-        // du fichier éditorial, ou à défaut la couverture dessinée.
         var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
 
         var debut = html.IndexOf("<article class=\"hero\">", StringComparison.Ordinal);
         debut.ShouldBeGreaterThan(-1);
         var vitrine = html[debut..html.IndexOf("</article>", debut, StringComparison.Ordinal)];
 
-        vitrine.ShouldNotContain("opengraph.githubassets.com");
         vitrine.ShouldContain("https://exemple.test/huffman.png");
     }
 
