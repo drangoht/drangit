@@ -20,13 +20,18 @@
 
     var input = form.querySelector("input[name='c']");
     var prompt = form.querySelector(".cli__prompt");
+    var screen = document.querySelector(".window__screen");
     var log = document.createElement("div");
     var history = [];
     var historyIndex = 0;
     var tried = Object.create(null);
 
     log.className = "cli__log";
-    form.parentNode.insertBefore(log, form);
+
+    // Dans l'écran, à la suite de ce qui y est déjà écrit : la sortie appartient au
+    // terminal. L'insérer entre l'écran et le prompt la mettrait hors de la zone qui
+    // défile, et elle s'empilerait sous la fenêtre.
+    (screen || form.parentNode).appendChild(log);
 
     // Les raccourcis sont annoncés seulement maintenant : sans ce fichier, ni Tab ni Ctrl+L
     // ne font quoi que ce soit, et les afficher d'emblée promettrait ce qui n'existe pas.
@@ -62,7 +67,13 @@
 
     function append(node) {
         log.appendChild(node);
-        node.scrollIntoView({ block: "nearest" });
+
+        // L'écran suit sa dernière ligne, comme un terminal qui déroule.
+        if (screen) {
+            screen.scrollTop = screen.scrollHeight;
+        } else {
+            node.scrollIntoView({ block: "nearest" });
+        }
     }
 
     function echo(line) {
@@ -236,6 +247,16 @@
             input.value = "";
         }
     });
+
+    // Cliquer dans l'écran rend la main au prompt, comme dans un terminal — sauf si l'on
+    // vient de sélectionner du texte, auquel cas on voulait le copier, pas taper.
+    if (screen) {
+        screen.addEventListener("mouseup", function () {
+            if (!String(window.getSelection())) {
+                input.focus();
+            }
+        });
+    }
 
     input.addEventListener("keydown", function (event) {
         if (event.key === "ArrowUp" && historyIndex > 0) {
