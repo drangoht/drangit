@@ -57,14 +57,6 @@ public sealed record Repository
     /// <summary>Démonstration en ligne, quand le dépôt en déclare une.</summary>
     public Uri? HomepageUrl { get; init; }
 
-    /// <summary>Image de partage produite par GitHub pour ce dépôt.</summary>
-    /// <remarks>
-    /// Réservée à l'affichage <em>dans</em> les pages du site, où elle est recadrée pour en
-    /// écarter l'avatar du compte qu'elle incruste. Elle ne sert jamais d'aperçu de partage :
-    /// hors du site, l'image part telle quelle et le recadrage ne s'applique plus.
-    /// </remarks>
-    public Uri? PreviewImageUrl { get; init; }
-
     /// <summary>Indique que le dépôt est archivé : lecture seule, plus maintenu.</summary>
     public bool IsArchived { get; init; }
 

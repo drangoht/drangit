@@ -95,5 +95,5 @@ ADR sera à rouvrir.
 - [x] `UsePreviewCard`, `cover__image--framed` et le recadrage sont supprimés.
 - [x] `InkOf` est couvert par des tests, teintes sombres comprises.
 - [x] Un test vérifie qu'aucune page ne référence `opengraph.githubassets.com`.
-- [ ] `Repository.PreviewImageUrl` est retirée du modèle et de la couche anti-corruption.
+- [x] `Repository.PreviewImageUrl` est retirée du modèle et de la couche anti-corruption.
 - [x] `CLAUDE.md` est mis à jour : les repères qui décrivaient la carte et son recadrage.
