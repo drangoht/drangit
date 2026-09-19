@@ -4,26 +4,33 @@
    coûterait plus en poids et en maintenance qu'elle ne rapporterait ici.
    --------------------------------------------------------------------------- */
 
+/* Palette « Console phosphore » (ADR 0008) : un écran à phosphore vert. L'accent n'y est pas
+   un ornement posé sur du gris, c'est la couleur du texte vif — d'où un fond presque noir et
+   des bordures qui sont du vert éteint, jamais du gris. */
 :root {
     color-scheme: dark;
 
-    --bg: #0d1117;
-    --bg-elevated: #161b22;
-    --bg-input: #1c2230;
-    --border: #272e3b;
-    --border-strong: #3a4354;
-    --text: #e6edf3;
-    --text-muted: #96a2b4;
-    --accent: #6e9eff;
-    --accent-hover: #93b6ff;
-    --accent-contrast: #0b1020;
-    --success: #46d39a;
-    --warning: #f5c451;
+    --bg: #04070a;
+    --bg-elevated: #0a1015;
+    --bg-input: #081119;
+    --border: #123526;
+    --border-strong: #1e5039;
+    --text: #d7ffe9;
+    --text-muted: #4c8a6d;
+    --accent: #3ef08c;
+    --accent-hover: #7cf5b3;
+    --accent-contrast: #04070a;
+    --success: #3ef08c;
+    --warning: #ffb454;
 
-    --radius: 10px;
-    --radius-sm: 6px;
+    /* Un terminal n'arrondit rien. Le rayon reste nommé pour ne pas avoir à le traquer
+       dans chaque règle le jour où l'on en voudrait. */
+    --radius: 2px;
+    --radius-sm: 2px;
     --shell: 72rem;
     --transition: 140ms ease;
+
+    --mono: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
 *,
@@ -39,8 +46,8 @@ body {
     flex-direction: column;
     background: var(--bg);
     color: var(--text);
-    font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", sans-serif;
-    font-size: 16px;
+    font-family: var(--mono);
+    font-size: 15px;
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
 }
@@ -67,7 +74,7 @@ h1, h2, h3 {
 }
 
 code {
-    font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+    font-family: var(--mono);
     font-size: 0.9em;
 }
 
@@ -116,7 +123,7 @@ code {
 
 .site-header {
     border-bottom: 1px solid var(--border);
-    background: rgba(13, 17, 23, 0.85);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
     backdrop-filter: blur(8px);
     position: sticky;
     top: 0;
@@ -148,7 +155,7 @@ code {
 
 .brand__mark {
     color: var(--accent);
-    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-family: var(--mono);
     font-size: 0.95rem;
 }
 
@@ -283,7 +290,7 @@ code {
     display: inline-block;
     padding: 0.35rem 0.8rem;
     border: 1px solid var(--border-strong);
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: var(--bg-input);
     color: var(--text-muted);
     font-size: 0.85rem;
@@ -312,7 +319,7 @@ code {
     display: inline-block;
     margin-left: 0.3rem;
     padding: 0 0.35rem;
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     background: color-mix(in srgb, var(--text) 10%, transparent);
     font-size: 0.75em;
     font-variant-numeric: tabular-nums;
@@ -574,7 +581,7 @@ code {
        conteneur et non sur celle de la tuile — sur la fiche, il valait 78 px dans une tuile
        de 350, et ne laissait plus de place au titre. */
     padding: 0.9rem 1rem;
-    font-family: ui-monospace, "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+    font-family: var(--mono);
     background:
         repeating-linear-gradient(
             to bottom,
@@ -745,7 +752,7 @@ code {
     display: inline-block;
     padding: 0.25rem 0.7rem;
     border: 1px solid var(--border-strong);
-    border-radius: 999px;
+    border-radius: var(--radius-sm);
     font-size: 0.85rem;
     color: var(--text-muted);
 }
@@ -835,7 +842,7 @@ code {
     border-radius: var(--radius-sm);
     background: var(--bg-input);
     color: var(--text);
-    font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+    font-family: var(--mono);
     font-size: 0.85rem;
 }
 
