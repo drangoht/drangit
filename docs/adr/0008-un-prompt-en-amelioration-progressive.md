@@ -117,6 +117,7 @@ et naviguer, il reste à sa place.
       `RepositoryFilter` — il est le seul à connaître le vocabulaire des commandes.
 - [x] Un test d'intégration vérifie qu'une commande de filtre soumise sans JavaScript rend la
       même page que le lien de filtre correspondant.
-- [x] Les filtres cliquables restent présents et utilisables au clavier : le prompt ne devient
-      jamais le seul moyen de filtrer.
+- [~] Les filtres cliquables restent présents et utilisables au clavier : le prompt ne devient
+      jamais le seul moyen de filtrer. **Repris par l'ADR 0010** : le prompt est devenu le
+      seul moyen, et cet ADR dit à quelles conditions.
 - [x] `CLAUDE.md` est amendé et renvoie à cet ADR.

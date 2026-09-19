@@ -109,6 +109,13 @@ docker compose up -d          # lit .env (voir .env.example)
   Le critère n'est pas la quantité de JavaScript, c'est ce qui disparaît quand il est absent —
   si c'est une fonction du site, le script est au mauvais endroit. Il ne connaît donc aucune
   règle métier : il présente et il navigue.
+- **L'accueil est une fenêtre de terminal, et rien d'autre** (ADR 0010) : pas de barre de
+  critères, pas de sélecteur de langage, pas de vitrine. Tout passe par le prompt. Le dépôt que
+  le fichier éditorial désigne ouvre la liste au lieu d'avoir son bloc.
+- **Une commande d'information doit répondre sans JavaScript.** `topics` et `langs` sont le seul
+  endroit où l'on découvre les sujets et les langages : le serveur les rend lui-même
+  (`KnownOutputs` dans `Home.razor`), en plus du script qui les affiche sans recharger. Une
+  sortie ajoutée au balisage sans être ajoutée à cette liste ne répondra qu'avec JavaScript.
 - **Le prompt a deux moitiés, et une seule connaît le vocabulaire.** `RepositoryCommand.Parse`
   (serveur, testé) traduit une ligne en filtre, en fiche ou en page ; `wwwroot/console.js`
   n'intercepte **que** les commandes dont la page contient déjà la sortie, et laisse partir

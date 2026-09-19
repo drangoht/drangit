@@ -36,12 +36,40 @@ public sealed class SiteTests : IClassFixture<SiteFactoryFixture>
     }
 
     [Fact]
-    public async Task Accueil_MetEnVitrineLeDepotDesigne()
+    public async Task Accueil_EstUneSeuleFenetreDeTerminal()
     {
         var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
 
-        html.ShouldContain("hero__title");
-        html.ShouldContain("Algorithme-de-Huffman");
+        // La page entière tient dans le cadre : barre de titre, écran, prompt.
+        html.ShouldContain("class=\"window\"");
+        html.ShouldContain("class=\"window__bar\"");
+        html.ShouldContain("class=\"window__screen\"");
+    }
+
+    [Fact]
+    public async Task Accueil_NOffreNiBarreDeFiltresNiVitrine()
+    {
+        var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
+
+        // Tout passe par le prompt (ADR 0010) : plus de critères cliquables au-dessus de la
+        // liste, plus de bloc de vitrine avant elle.
+        html.ShouldNotContain("class=\"filters\"");
+        html.ShouldNotContain("class=\"chip");
+        html.ShouldNotContain("hero__title");
+    }
+
+    [Fact]
+    public async Task Accueil_PlaceLeDepotDesigneEnTeteDeListe()
+    {
+        var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
+
+        // La vitrine a disparu, pas la désignation : le dépôt mis en avant par le fichier
+        // éditorial ouvre la liste.
+        var designe = html.IndexOf("Algorithme-de-Huffman", StringComparison.Ordinal);
+        var autre = html.IndexOf("ASM-Gameboy-FirstProg", StringComparison.Ordinal);
+
+        designe.ShouldBeGreaterThan(-1);
+        autre.ShouldBeGreaterThan(designe);
     }
 
     [Fact]
@@ -72,10 +100,10 @@ public sealed class SiteTests : IClassFixture<SiteFactoryFixture>
     {
         var html = await CreateClient().GetStringAsync("/en/", CancellationToken.None);
 
-        // Ce sont des lignes de commande décoratives : elles annoncent ce que la section
-        // affiche, comme la sortie d'un programme le ferait.
+        // C'est une ligne de commande décorative : elle annonce ce que la liste affiche,
+        // comme la sortie d'un programme le ferait, et reflète les critères posés.
         html.ShouldContain("class=\"cli__line\"");
-        html.ShouldContain("repos --featured");
+        html.ShouldContain("repos --list");
     }
 
     [Fact]
@@ -139,6 +167,22 @@ public sealed class SiteTests : IClassFixture<SiteFactoryFixture>
         // Valider un prompt vide ne doit pas boucler ni laisser « c= » dans l'adresse.
         reponse.StatusCode.ShouldBe(HttpStatusCode.Found);
         reponse.Headers.Location!.PathAndQuery.ShouldBe("/en/");
+    }
+
+    [Fact]
+    public async Task Prompt_SansJavaScript_UneCommandeDInformationEstRendueParLeServeur()
+    {
+        var reponse = await CreateClient().GetAsync(
+            new Uri("/en/?c=topics", UriKind.Relative), CancellationToken.None);
+
+        // Les critères cliquables ayant disparu (ADR 0010), « topics » est le seul endroit où
+        // l'on découvre les sujets : il doit répondre sans JavaScript, donc sans redirection.
+        reponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+
+        var html = await reponse.Content.ReadAsStringAsync(CancellationToken.None);
+
+        html.ShouldNotContain("class=\"cli__outputs\" hidden");
+        html.ShouldContain("algorithms");
     }
 
     [Fact]
@@ -214,15 +258,6 @@ public sealed class SiteTests : IClassFixture<SiteFactoryFixture>
         // Sans elle, une fiche sans capture n'aurait aucune illustration.
         html.ShouldContain("--cover-accent:");
         html.ShouldContain("<span class=\"cover__owner\">drangoht/</span>ASM-Gameboy-FirstProg");
-    }
-
-    [Fact]
-    public async Task Accueil_QuandUnFiltreEstActif_EffaceLaVitrine()
-    {
-        // Filtrer, c'est chercher : la vitrine deviendrait un doublon au-dessus des résultats.
-        var html = await CreateClient().GetStringAsync("/en/?topic=algorithms", CancellationToken.None);
-
-        html.ShouldNotContain("hero__title");
     }
 
     [Fact]
