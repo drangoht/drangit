@@ -287,6 +287,56 @@
         }
     }
 
+    /**
+     * Demande la commande au serveur et empile ce qu'il répond, sans quitter la page.
+     *
+     * Le script ne gagne aucune règle au passage : il ne sait toujours pas ce qu'est un
+     * sujet ni comment filtrer. Il envoie la ligne à l'adresse qu'aurait suivie le
+     * formulaire, et recopie le bloc que le serveur a rendu — même travail que pour les
+     * sorties déjà présentes dans la page, à ceci près qu'il faut aller le chercher.
+     *
+     * Deux cas où l'on rend la main au navigateur : la réponse ne contient pas d'écran —
+     * « open » et « cd » mènent ailleurs, et on veut vraiment y aller — ou la requête a
+     * échoué, auquel cas la navigation ordinaire reste le filet.
+     */
+    function fetchInto(line, action) {
+        var url = action + (action.indexOf("?") < 0 ? "?" : "&") + "c=" + encodeURIComponent(line);
+
+        window.fetch(url, { headers: { "Accept": "text/html" } })
+            .then(function (response) {
+                return response.text().then(function (html) {
+                    return { html: html, url: response.url };
+                });
+            })
+            .then(function (result) {
+                var page = new DOMParser().parseFromString(result.html, "text/html");
+                var screenful = page.querySelector(".cli__screenful");
+
+                if (!screenful) {
+                    window.location.href = result.url;
+                    return;
+                }
+
+                // La ligne de commande du fragment ferait doublon : l'écho, juste au-dessus,
+                // montre déjà ce qui a été tapé.
+                var echoed = screenful.querySelector(".cli__line");
+
+                if (echoed) {
+                    echoed.remove();
+                }
+
+                screenful.classList.add("cli__output");
+                append(screenful);
+
+                // L'adresse suit ce qui est affiché : la page reste rechargeable et
+                // partageable, et le bouton « précédent » retrouve l'état d'avant.
+                window.history.pushState({}, "", result.url);
+            })
+            .catch(function () {
+                window.location.href = url;
+            });
+    }
+
     form.addEventListener("submit", function (event) {
         var line = input.value.trim();
 
@@ -298,6 +348,17 @@
 
         if (handle(line)) {
             event.preventDefault();
+            input.value = "";
+            return;
+        }
+
+        // Tout le reste est une navigation que le serveur décide. On la fait faire en
+        // arrière-plan pour que la sortie s'empile, comme dans un terminal, au lieu de
+        // recharger la page et d'effacer ce qui précède.
+        if (line && window.fetch && window.DOMParser) {
+            event.preventDefault();
+            echo(line);
+            fetchInto(line, form.getAttribute("action") || ".");
             input.value = "";
         }
     });
@@ -311,6 +372,13 @@
             }
         });
     }
+
+    // Le bouton « précédent » doit défaire ce que pushState a écrit. Le DOM, lui, ne revient
+    // pas en arrière tout seul : on recharge l'adresse retrouvée, qui rend exactement ce que
+    // le serveur rendrait.
+    window.addEventListener("popstate", function () {
+        window.location.reload();
+    });
 
     // Le curseur est dans la ligne de commande dès l'arrivée : on ouvre un terminal pour y
     // taper. `preventScroll` évite que la page saute jusqu'au champ, qui est en bas du cadre.

@@ -31,6 +31,7 @@
            pouvoir l'effacer comme il efface les sorties suivantes, sans quoi la commande
            laisserait la liste derrière elle. *@
         <div class="cli__initial">
+            <div class="cli__intro">
             @* La bannière tient lieu de titre d'affichage : la peau n'a pas de fonte d'affichage,
                c'est le dessin en caractères qui en fait office. Elle est décorative pour qui
                écoute la page — le titre de niveau 1 juste en dessous porte le texte. *@
@@ -41,6 +42,8 @@
             <h1 class="cli__note">// @T["Home.Title"] — @_allRepositories.Count @T["Prompt.Stats.Repositories"], @_availableLanguages.Count @T["Prompt.Stats.Languages"]</h1>
             <p class="cli__note">// @T["Home.Intro"]</p>
             <p class="cli__boot">@T["Prompt.Boot"]</p>
+            </div>
+
 
             @if (_allRepositories.Count == 0)
             {
@@ -48,6 +51,9 @@
             }
             else
             {
+                @* La sortie de la commande en cours : c'est ce bloc, et lui seul, que le
+                   prompt rapporte et empile quand on lui demande autre chose. *@
+                <div class="cli__screenful">
                 <p class="cli__line" aria-hidden="true">
                     <span class="cli__prompt">@Prompt</span> repos @_filter.ToCommandLine()
                 </p>
@@ -159,6 +165,7 @@
                     <div data-output="vim" hidden="@Hidden("vim")"><pre>@T["Prompt.Vim"]</pre></div>
                     <div data-output="exit" hidden="@Hidden("exit")"><pre>@T["Prompt.Exit"]</pre></div>
                 </div>
+            </div>
             }
         </div>
     </div>

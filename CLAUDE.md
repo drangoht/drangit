@@ -122,6 +122,10 @@ docker compose up -d          # lit .env (voir .env.example)
   tout le reste. **Ajouter une commande d'information, c'est ajouter un `<div data-output="…">`
   dans `Home.razor`** — le script n'a pas à le savoir, et le texte reste dans les `.resx`.
   Ajouter une commande qui filtre ou qui navigue, c'est un cas dans le parseur, avec son test.
+- **Une commande qui filtre ne recharge plus la page** (ADR 0011) : le script va chercher la
+  sortie au serveur et l'empile, comme un terminal. Il n'extrait que `.cli__screenful` — jamais
+  `.cli__intro`, sans quoi la bannière se répéterait à chaque commande — et rend la main au
+  navigateur dès que la réponse n'en contient pas, ce qui est le cas de `open` et de `cd`.
 - **`console.js` n'est couvert par aucun test** (ADR 0008) : toute retouche se vérifie dans le
   navigateur — `help`, `stats`, `eggs`, la complétion `Tab`, l'historique, et surtout qu'une
   commande de filtre **n'est pas** interceptée.
