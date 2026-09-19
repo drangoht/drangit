@@ -355,6 +355,10 @@ jobs:
           # `vars` et non `secrets` : une URL publique n'est pas un secret, et masquée en
           # `***` dans la trace, elle rend le moindre diagnostic impossible.
           url="${{ vars.SITE_URL || format('https://{0}', secrets.VPS_HOST) }}"
+          # `--max-time` n'est pas une précaution de style : sur un port filtré, la
+          # connexion n'est pas refusée mais ignorée, et curl attend la fin du délai TCP —
+          # une douzaine de minutes pour trois pages, pendant lesquelles le job paraît figé
+          # au lieu d'échouer. La sonde locale de l'étape précédente le borne déjà.
           # La sonde *et* les pages d'accueil : /health n'interroge pas GitHub, il répond
           # donc 200 alors que le catalogue est en erreur et que le site est inutilisable.
           # Les deux langues, car l'une peut casser sans l'autre — et non la racine, qui
@@ -362,7 +366,7 @@ jobs:
           for page in /health /en/ /fr/; do
             servie=""
             for attempt in $(seq 1 12); do
-              code="$(curl -fsS -o /dev/null -w '%{http_code}' "${url}${page}" || true)"
+              code="$(curl -fsS -o /dev/null --max-time 15 -w '%{http_code}' "${url}${page}" || true)"
               if [ "$code" = "200" ]; then
                 echo "${url}${page} répond (tentative ${attempt})."
                 servie="oui"
