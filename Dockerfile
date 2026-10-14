@@ -15,6 +15,11 @@ RUN dotnet restore src/Drangit.slnx
 
 COPY . .
 
+# Seconde restauration, rapide car les paquets sont déjà là : le SDK n'ajoute le paquet qui
+# fournit _framework/blazor.web.js qu'en voyant des composants Razor, absents de la première.
+# Sans elle, l'image publiée référence un script qu'elle ne sert pas (404 à chaque page).
+RUN dotnet restore src/Drangit.slnx
+
 # La suite tourne dans l'image : une image ne se construit pas sur du code rouge.
 RUN dotnet test --solution src/Drangit.slnx --configuration $BUILD_CONFIGURATION --no-restore
 

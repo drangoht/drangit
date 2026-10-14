@@ -157,7 +157,7 @@ jobs:
           # Les deux langues, car l'une peut casser sans l'autre — et non la racine, qui
           # ne fait que rediriger vers l'une d'elles (ADR 0006).
           echec=0
-          for page in /health /en/ /fr/; do
+          for page in /health /en/ /fr/ /_framework/blazor.web.js; do
             servie=""
             for tentative in $(seq 1 20); do
               code="$(curl -fsS -o /dev/null -w '%{http_code}' "http://localhost:8080${page}" || true)"
