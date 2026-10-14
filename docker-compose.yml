@@ -29,7 +29,9 @@ services:
       # 8080 côté conteneur : c'est le port sur lequel le Dockerfile fait écouter Kestrel
       # (`ASPNETCORE_HTTP_PORTS`). Côté hôte, 8080 et 8081 sont déjà pris sur le serveur —
       # le défaut vaut donc 8082, et `HTTP_PORT` reste là pour en changer sans toucher au code.
-      - "${HTTP_PORT:-8082}:8080"
+      # Publié sur 127.0.0.1 seulement : le site ne se joint que par nginx et son HTTPS, pas
+      # en clair par l'IP du serveur (Docker passe devant le pare-feu du système).
+      - "127.0.0.1:${HTTP_PORT:-8082}:8080"
 
     # Durcissement : l'application n'écrit que dans son volume d'instantané.
     read_only: true
